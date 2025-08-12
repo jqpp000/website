@@ -1,0 +1,270 @@
+/* 全局重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 14px; /* 统一舒适字体大小 */
+  color: #000; /* 所有文字黑色 */
+}
+
+/* 网站整体背景色 - 在这里设置 */
+body {
+  background-color: #2E220A; /* 示例：浅灰色背景，可替换为任意颜色 */
+  font-size: 14px;
+  color: #000;
+}
+
+/* 顶部背景图 */
+.top-banner {
+  width: 1101px; /* 固定宽度与表格对齐 */
+  height: 168px; /* 固定高度 */
+  background: url('./top-banner.jpg') no-repeat center/cover; /* 背景图 */
+  position: relative;
+  margin: 0 auto; /* 居中显示 */
+}
+.banner-info {
+  position: absolute;
+  bottom: 0;
+  width: 100%; /* 与背景图同宽 */
+  background: rgba(0,0,0,0.5); /* 半透明黑底 */
+  color: #fff !important; /* 页眉文字白色 */
+  padding: 8px 0;
+  text-align: center; /* 文字居中 */
+}
+.banner-info p {
+  color: #fff !important; /* 强制白色 */
+  display: inline-block;
+}
+
+/* 广告区域容器：无缝连接 */
+.ad-container {
+  width: 1101px; /* 固定总宽度 */
+  margin: 0 auto; /* 居中对齐 */
+  border: 1px solid #ddd;
+  border-top: none; /* 与顶部背景图无缝 */
+}
+
+/* 联系方式行（与表格同宽） */
+.contact-row {
+  width: 1101px; /* 固定宽度 */
+  padding: 8px 0;
+  border-bottom: 1px solid #f35207;
+  margin: 0 auto;
+  background-color: #f70606; /* 背景色 */
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  height: 30px; /* 与表格行高一致 */
+  line-height: 30px; /* 垂直居中 */
+}
+
+/* 滚动文字样式 - 关键：固定文字大小 */
+.contact-row::after {
+  content: "服务器名、开机时间、游戏版本特色介绍、经验、版本、游戏主页   ";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 14px; /* 与表格文字大小一致 */
+  animation: scroll 20s linear infinite;
+}
+
+/* 滚动动画 */
+@keyframes scroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* 表格文字样式（参考） */
+.server-table td,
+.server-table th {
+  font-size: 14px; /* 与滚动文字保持一致 */
+}
+
+
+/* 表头行（背景色 #FFC60A） */
+.header-row {
+  background-color: #FFC60A;
+  height: 30px; /* 统一行高 */
+}
+
+/* 表头单元格 - 仅第一个区域有表头 */
+.server-table th {
+  font-weight: bold;
+  text-align: center; /* 内容居中 */
+  border-right: 1px solid #FFCC22; /* 竖线分隔 */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  height: 30px; /* 统一行高 */
+}
+/* 表头列宽设置 */
+.th-server { width: 175px; }
+.th-time { width: 130px; }
+.th-feature { width: 617px; }
+.th-exp { width: 58px; }
+.th-version { width: 58px; }
+.th-home { width: 63px; } /* 微调以确保总宽度1101px */
+
+/* 最后一列表头无边框 */
+.server-table th:last-child {
+  border-right: none;
+}
+
+/* 内容单元格 */
+.server-table td {
+  text-align: center; /* 内容居中 */
+  border-right: 1px solid #FFCC22; /* 竖线分隔 */
+  border-bottom: 1px solid #FFCC22; /* 横线分隔 */
+  line-height: 30px; /* 行高30px，确保垂直居中 */
+  height: 30px; /* 固定行高 */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* 内容列宽设置 */
+.td-server { width: 175px; }
+.td-time { width: 130px; }
+.td-feature { width: 617px; }
+.td-exp { width: 58px; }
+.td-version { width: 58px; }
+.td-home { width: 63px; } /* 微调以确保总宽度1101px */
+
+/* 最后一列内容无边框 */
+.server-table td:last-child {
+  border-right: none;
+}
+
+/* 最后一行去掉下边框 */
+.server-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 悬停效果 */
+.server-table tbody tr:hover {
+  background: rgba(255,255,255,0.7);
+}
+
+/* 区域背景色 */
+.top-yellow {
+  background-color: #FFFF00; /* 第一个区域黄色 */
+}
+.white {
+  background-color: #FFFFFF; /* 第二个区域白色 */
+}
+.orange {
+  background-color: #FF8D5E; /* 第三个区域橙色 */
+}
+.green {
+  background-color: #D6FF52; /* 第四个区域浅绿色 */
+}
+
+/* 游戏主页链接样式 */
+.homepage-link {
+  color: #0066cc;
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  margin-right: 8px; /* 与编辑按钮保持间距 */
+}
+.homepage-link:hover {
+  color: #004080;
+  text-decoration: underline;
+}
+
+/* 编辑按钮样式 */
+.action-btn.edit-btn {
+  background: #ffc107;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* 加载状态 */
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+.loading i {
+  animation: spin 1.5s linear infinite;
+  margin-right: 8px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 无数据提示 - 修复所有区域居中问题 */
+.ad-section .server-table td.no-data {
+  text-align: center !important;
+  padding: 20px 0; /* 上下padding确保垂直居中 */
+  color: #999;
+  width: 100%;
+  display: table-cell; /* 强制表格单元格特性 */
+}
+
+/* 错误提示 */
+.error {
+  text-align: center;
+  padding: 20px;
+  color: #e74c3c;
+}
+
+/* 底部备用区域 */
+.bottom-banner {
+  width: 1101px;
+  height: 168px;
+  margin: 0 auto;
+  background: url('bottom-banner.jpg') no-repeat center/cover; /* 保留背景图 */
+  border: 1px solid #d12121;
+  border-top: none;
+  position: relative; /* 关键：让内部文字可以定位 */
+}
+
+/* 底部文字容器 */
+.bottom-text {
+  position: absolute; /* 绝对定位，可自由调整位置 */
+  top: 50%; /* 垂直居中 */
+  left: 50%; /* 水平居中 */
+  transform: translate(-50%, -50%); /* 精确居中 */
+  text-align: center; /* 文字居中 */
+  color: #0bdb9d; /* 文字颜色（根据背景图调整，确保清晰） */
+  text-shadow: 1px 1px 2px #1e1d8d; /* 文字阴影，增强可读性 */
+  width: 100%; /* 限制文字宽度 */
+  padding: 0 20px; /* 左右内边距，避免文字贴边 */
+}
+
+/* 底部文字细节 */
+.bottom-text p {
+  margin: 5px 0; /* 段落间距 */
+  font-size: 14px; /* 文字大小 */
+}
+/* 视图切换按钮样式 */
+.view-toggle {
+  display: flex;
+  gap: 10px;
+  margin: 0 15px; /* 与左右元素保持间距 */
+}
+
+.view-btn {
+  padding: 8px 16px;
+  background: #f1f5f9;
+  color: #333;
+  border: 1px solid #e2e8f0;
+}
+
+.view-btn.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.view-btn:hover:not(.active) {
+  background: #e2e8f0;
+  transform: none; /* 覆盖全局btn的hover效果 */
+  box-shadow: none;
+}

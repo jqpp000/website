@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>游戏开服表</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 添加Font Awesome图标库以支持加载动画 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* 补充必要的基础样式 */
+    .btn-enter {
+      padding: 4px 8px;
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .loading {
+      text-align: center;
+      color: #666;
+      padding: 10px;
+    }
+    /* 统一所有区域的布局样式，取消间距实现无缝连接 */
+    .ad-section {
+      margin: 0 auto; /* 取消上下外边距，实现无缝连接 */
+      padding: 15px;
+      border-radius: 0; /* 取消圆角，增强无缝感 */
+      max-width: 1100px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    /* 各区域颜色区分 */
+    .top-yellow {
+      background-color: #fff9c4; /* 置顶黄区域 */
+      border: 1px solid #ffe082;
+      border-bottom: none; /* 取消底部边框，增强无缝感 */
+    }
+    .white-area {
+      background-color: #f9f9f9; /* 白色区域 */
+      border: 1px solid #e0e0e0;
+      border-top: none; /* 取消顶部边框，增强无缝感 */
+      border-bottom: none; /* 取消底部边框，增强无缝感 */
+    }
+    .orange-area {
+      background-color: #fff3e0; /* 橙色区域 */
+      border: 1px solid #ffcc80;
+      border-top: none; /* 取消顶部边框，增强无缝感 */
+      border-bottom: none; /* 取消底部边框，增强无缝感 */
+    }
+    .green-area {
+      background-color: #e8f5e9; /* 绿色区域 */
+      border: 1px solid #a5d6a7;
+      border-top: none; /* 取消顶部边框，增强无缝感 */
+    }
+    .server-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    .server-table th, .server-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    .server-table th {
+      background-color: rgba(0,0,0,0.05);
+      font-weight: bold;
+    }
+    .server-table tr:hover {
+      background-color: rgba(0,0,0,0.02);
+    }
+    /* 顶部和底部横幅样式 - 确保与广告区域宽度一致 */
+    .top-banner, .bottom-banner {
+      width: 100%;
+      background-size: cover;
+      background-position: center;
+      padding: 20px 0;
+      text-align: center;
+    }
+    .banner-info, .bottom-text {
+      max-width: 1100px; /* 与广告区域最大宽度一致 */
+      margin: 0 auto;
+      padding: 0 15px; /* 与广告区域内边距一致 */
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部背景图区域 -->
+  <div class="top-banner">
+    <div class="banner-info">
+      <p>制作联系QQ: 2653920258</p>
+    </div>
+  </div>
+
+  <!-- 广告区域容器：包含所有服务器区域 -->
+  <div class="ad-container">
+    <!-- 推荐服务器区域：黄色背景 -->
+    <div class="ad-section top-yellow">
+      <table class="server-table">
+        <thead>
+          <tr>
+            <th>服务器名称</th>
+            <th>开服时间</th>
+            <th>版本特色</th>
+            <th>经验倍率</th>
+            <th>版本号</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="top-yellow-list">
+          <!-- 加载状态 -->
+          <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 白色区域服务器 -->
+    <div class="ad-section white-area">
+      <table class="server-table">
+        <thead>
+          <tr>
+            <th>服务器名称</th>
+            <th>开服时间</th>
+            <th>版本特色</th>
+            <th>经验倍率</th>
+            <th>版本号</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="white-area-list">
+          <!-- 加载状态 -->
+          <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 橙色区域服务器 -->
+    <div class="ad-section orange-area">
+      <table class="server-table">
+        <thead>
+          <tr>
+            <th>服务器名称</th>
+            <th>开服时间</th>
+            <th>版本特色</th>
+            <th>经验倍率</th>
+            <th>版本号</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="orange-area-list">
+          <!-- 加载状态 -->
+          <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 绿色区域服务器 -->
+    <div class="ad-section green-area">
+      <table class="server-table">
+        <thead>
+          <tr>
+            <th>服务器名称</th>
+            <th>开服时间</th>
+            <th>版本特色</th>
+            <th>经验倍率</th>
+            <th>版本号</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="green-area-list">
+          <!-- 加载状态 -->
+          <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 底部区域 -->
+  <div class="bottom-banner">
+    <div class="bottom-text">
+      <p>© 2023 游戏开服表 版权所有 | 联系我们：2653920258</p>
+      <p>免责声明：本网站内容仅供参考，具体以游戏实际内容为准</p>
+    </div>
+  </div>
+
+  <script>
+    // API基础地址
+    const API_BASE_URL = 'http://localhost:3000/api';
+    let allAds = []; // 存储所有广告数据
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      // 加载广告数据
+      loadAds();
+    });
+
+    /**
+     * 从后端加载广告数据
+     */
+    async function loadAds() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/ads?page=1&pageSize=100`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+          },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP错误状态: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // 验证返回数据格式
+        if (result.code !== 200 || !result.data?.list || !Array.isArray(result.data.list)) {
+          throw new Error('数据格式错误或无数据');
+        }
+
+        allAds = result.data.list;
+        renderAdsByArea();
+
+      } catch (error) {
+        console.error('加载广告失败:', error);
+        // 显示错误信息
+        const areas = ['top-yellow-list', 'white-area-list', 'orange-area-list', 'green-area-list'];
+        areas.forEach(areaId => {
+          document.getElementById(areaId).innerHTML = 
+            `<tr><td colspan="6" style="color: red;">加载失败: ${error.message}</td></tr>`;
+        });
+      }
+    }
+
+    /**
+     * 按区域渲染广告
+     */
+    function renderAdsByArea() {
+      // 按区域分类广告
+      const adsByArea = {
+        'top_yellow': [],
+        'white_area': [],
+        'orange_area': [],
+        'green_area': []
+      };
+
+      allAds.forEach(ad => {
+        if (adsByArea.hasOwnProperty(ad.area)) {
+          adsByArea[ad.area].push(ad);
+        }
+      });
+
+      // 渲染各区域广告
+      renderAreaAds('top-yellow-list', adsByArea.top_yellow);
+      renderAreaAds('white-area-list', adsByArea.white_area);
+      renderAreaAds('orange-area-list', adsByArea.orange_area);
+      renderAreaAds('green-area-list', adsByArea.green_area);
+    }
+
+    /**
+     * 渲染特定区域的广告
+     */
+    function renderAreaAds(areaId, ads) {
+      const tbody = document.getElementById(areaId);
+      
+      if (ads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">暂无数据</td></tr>';
+        return;
+      }
+
+      // 按开服时间排序
+      ads.sort((a, b) => new Date(a.open_time) - new Date(b.open_time));
+      
+      tbody.innerHTML = ads.map(ad => {
+        // 检查是否过期
+        const isExpired = ad.expire_time && new Date(ad.expire_time) < new Date();
+        
+        return `
+          <tr ${isExpired ? 'style="opacity: 0.6;"' : ''}>
+            <td>${ad.server_name || '未命名'}</td>
+            <td>
+              ${formatDateTime(ad.open_time)}
+              ${isExpired ? '<span style="color: red; margin-left: 5px;">(已过期)</span>' : ''}
+            </td>
+            <td>${ad.feature || '-'}</td>
+            <td>${ad.exp_rate || '-'}</td>
+            <td>${ad.version || '-'}</td>
+            <td>
+              <a href="${ad.homepage || '#'}" target="_blank" class="btn-enter">进入游戏</a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /**
+     * 格式化日期时间为本地字符串
+     */
+    function formatDateTime(dateString) {
+      if (!dateString) return '未知时间';
+      try {
+        return new Date(dateString).toLocaleString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return dateString;
+      }
+    }
+
+    /**
+     * 格式化日期时间为input的datetime-local格式
+     */
+    function formatDateTimeForInput(date) {
+      if (!date) return '';
+      try {
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '';
+        return d.toISOString().slice(0, 16);
+      } catch (e) {
+        return '';
+      }
+    }
+  </script>
+</body>
+</html>

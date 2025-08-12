@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>广告管理后台</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 保持原有样式不变 */
+    /* 基础样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+      font-size: 14px;
+    }
+    body {
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #333;
+      text-align: center;
+    }
+    
+    /* 操作区样式 */
+    .operation-bar {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .search-group {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background-color: #2196F3;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #0b7dda;
+    }
+    .btn-danger {
+      background-color: #f44336;
+      color: white;
+    }
+    .btn-danger:hover {
+      background-color: #d32f2f;
+    }
+    .btn-secondary {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+    .btn-secondary:hover {
+      background-color: #d0d0d0;
+    }
+    .form-control {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 200px;
+    }
+    
+    /* 表格样式 */
+    .table-container {
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .ad-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .ad-table th, .ad-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    .ad-table th {
+      background-color: #f9f9f9;
+      font-weight: bold;
+      color: #555;
+    }
+    .ad-table tr:hover {
+      background-color: #f5f5f5;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: white;
+    }
+    .badge-top-yellow {
+      background-color: #ffc107;
+    }
+    .badge-white {
+      background-color: #e9ecef;
+      color: #333;
+    }
+    .badge-orange {
+      background-color: #fd7e14;
+    }
+    .badge-green {
+      background-color: #28a745;
+    }
+    .badge-danger {
+      background-color: #dc3545;
+    }
+    .badge-primary {
+      background-color: #0d6efd;
+    }
+    
+    /* 弹窗样式 */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    .modal-backdrop.show {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal {
+      background-color: white;
+      width: 600px;
+      border-radius: 6px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      transform: translateY(-20px);
+      transition: transform 0.3s;
+    }
+    .modal-backdrop.show .modal {
+      transform: translateY(0);
+    }
+    .modal-header {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #666;
+    }
+    .modal-body {
+      padding: 15px;
+    }
+    .modal-footer {
+      padding: 15px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    /* 表单样式 */
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+    }
+    .form-group .form-control {
+      width: 100%;
+    }
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
+    .form-row .form-group {
+      flex: 1;
+    }
+    
+    /* 状态提示样式 */
+    .status-message {
+      padding: 15px;
+      text-align: center;
+      color: #666;
+    }
+    .loading {
+      color: #666;
+    }
+    .loading i {
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+    .error {
+      color: #f44336;
+    }
+    .empty {
+      color: #666;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 批量操作样式 */
+    .batch-operations {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .checkbox-column {
+      width: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>游戏广告管理系统</h1>
+    
+    <!-- 操作栏 -->
+    <div class="operation-bar">
+      <div class="search-group">
+        <input type="text" class="form-control" id="searchInput" placeholder="搜索服务器名...">
+        <select class="form-control" id="areaFilter">
+          <option value="">所有区域</option>
+          <option value="top-yellow">置顶黄</option>
+          <option value="white">白色</option>
+          <option value="orange">橙色</option>
+          <option value="green">绿色</option>
+        </select>
+        <select class="form-control" id="statusFilter">
+          <option value="">全部状态</option>
+          <option value="expired">仅过期</option>
+        </select>
+        <button class="btn btn-secondary" id="searchBtn">
+          <i class="fas fa-search"></i> 搜索
+        </button>
+      </div>
+      <button class="btn btn-primary" id="addAdBtn">
+        <i class="fas fa-plus"></i> 发布广告
+      </button>
+    </div>
+    
+    <!-- 批量操作 -->
+<div class="batch-operations">
+  <input type="checkbox" id="selectAll">
+  <label for="selectAll">全选</label>
+  <button class="btn btn-danger" id="batchDeleteBtn" disabled>
+    <i class="fas fa-trash"></i> 批量删除
+  </button>
+  <span id="selectedCount">已选择 0 项</span>
+</div>
+
+<!-- 新增：广告状态统计信息 -->
+<div class="batch-operations">
+  <span id="statusSummary" style="color: #666;">
+    <i class="fas fa-info-circle"></i> 当前正常广告 0 条，已过期广告 0 条
+  </span>
+</div>
+
+<!-- 广告表格 -->
+<div class="table-container">
+      <table class="ad-table">
+        <thead>
+          <tr>
+            <th class="checkbox-column"><i class="fas fa-check"></i></th>
+            <th>ID</th>
+            <th>服务器名</th>
+            <th>开机时间</th>
+            <th>区域</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="adTableBody">
+          <tr>
+            <td colspan="7" class="status-message loading">
+              <i class="fas fa-circle-notch"></i> 加载广告数据中...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- 广告编辑弹窗 -->
+  <div class="modal-backdrop" id="adModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">发布新广告</h2>
+        <button class="close-modal" id="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="adForm">
+          <input type="hidden" id="adId">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="serverName">服务器名 <span style="color: red;">*</span></label>
+              <input type="text" class="form-control" id="serverName" required>
+            </div>
+            <div class="form-group">
+              <label for="openTime">开机时间 <span style="color: red;">*</span></label>
+              <input type="datetime-local" class="form-control" id="openTime" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="feature">游戏版本特色介绍</label>
+            <textarea class="form-control" id="feature" rows="3"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expRate">经验倍率</label>
+              <input type="text" class="form-control" id="expRate" placeholder="例如：10x">
+            </div>
+            <div class="form-group">
+              <label for="version">版本</label>
+              <input type="text" class="form-control" id="version" placeholder="例如：v1.0.0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="homepage">游戏主页</label>
+              <input type="url" class="form-control" id="homepage" placeholder="https://">
+            </div>
+            <div class="form-group">
+              <label for="displayDuration">展示时长(小时)</label>
+              <input type="number" class="form-control" id="displayDuration" min="1" value="24">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="area">区域</label>
+            <select class="form-control" id="area">
+  <option value="top_yellow">置顶黄</option>
+  <option value="white_area">白色</option>
+  <option value="orange_area">橙色</option>
+  <option value="green_area">绿色</option>
+</select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelBtn">取消</button>
+        <button class="btn btn-primary" id="saveAdBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 后端API基础地址（根据实际部署情况修改）
+    const API_BASE_URL = 'http://localhost:3000/api/ads';
+    let allAds = []; // 存储所有广告数据
+    let selectedIds = new Set(); // 存储选中的广告ID
+
+    // DOM加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      // 加载广告数据
+      loadAdData();
+      
+      // 绑定事件监听
+      bindEventListeners();
+    });
+
+    /**
+     * 绑定所有事件监听器
+     */
+    function bindEventListeners() {
+      // 搜索按钮
+      document.getElementById('searchBtn').addEventListener('click', filterAds);
+      
+      // 发布广告按钮
+      document.getElementById('addAdBtn').addEventListener('click', () => {
+        openModal();
+      });
+      
+      // 关闭弹窗按钮
+      document.getElementById('closeModal').addEventListener('click', closeModal);
+      document.getElementById('cancelBtn').addEventListener('click', closeModal);
+      
+      // 保存广告按钮
+      document.getElementById('saveAdBtn').addEventListener('click', saveAd);
+      
+      // 全选按钮
+      document.getElementById('selectAll').addEventListener('change', handleSelectAll);
+      
+      // 批量删除按钮
+      document.getElementById('batchDeleteBtn').addEventListener('click', batchDeleteAds);
+      
+      // 搜索框回车事件
+      document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') filterAds();
+      });
+    }
+
+    /**
+     * 从后端加载广告数据
+     */
+    async function loadAdData() {
+      const tableBody = document.getElementById('adTableBody');
+      tableBody.innerHTML = '<tr><td colspan="7" class="status-message loading"><i class="fas fa-circle-notch"></i> 加载广告数据中...</td></tr>';
+      
+      try {
+        // 发起请求（添加缓存控制头）
+        const response = await fetch(`${API_BASE_URL}?page=1&pageSize=100`, {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache' // 禁用缓存，强制获取最新数据
+          },
+          credentials: 'include'
+        });
+
+        console.log('请求状态:', response.status);
+
+        if (!response.ok) {
+          throw new Error(`后端返回错误：${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        console.log('后端返回完整数据:', result);
+        console.log('广告列表数据:', result.data?.list);
+
+        if (result.code !== 200) {
+          throw new Error(`后端返回错误信息：${result.error || '未知错误'}`);
+        }
+        if (!result.data || !Array.isArray(result.data.list)) {
+          throw new Error('后端返回数据格式错误，缺少 data.list 数组');
+        }
+
+        allAds = result.data.list;
+        renderAdTable(allAds);
+        
+      } catch (error) {
+        console.error('加载失败详情：', error);
+        tableBody.innerHTML = `<tr><td colspan="7" class="status-message error"><i class="fas fa-exclamation-triangle"></i> 加载失败：${error.message}</td></tr>`;
+      }
+    }
+
+    /**
+     * 渲染广告表格
+     * @param {Array} ads - 要渲染的广告数组
+     */
+    function renderAdTable(ads) {
+      const tableBody = document.getElementById('adTableBody');
+      
+      // 计算正常和过期广告数量
+      const normalCount = ads.filter(ad => {
+        return ad.expire_time ? new Date(ad.expire_time) >= new Date() : true;
+      }).length;
+      const expiredCount = ads.length - normalCount;
+      
+      // 更新统计信息到页面
+      document.getElementById('statusSummary').innerHTML = `
+        <i class="fas fa-info-circle"></i> 当前正常广告 ${normalCount} 条，已过期广告 ${expiredCount} 条
+      `;
+ 
+      // 空数据处理
+      if (ads.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="status-message empty"><i class="fas fa-info-circle"></i> 没有广告数据，请点击"发布广告"添加</td></tr>';
+        return;
+      }
+      
+      // 正常渲染
+      tableBody.innerHTML = '';
+      ads.forEach(ad => {
+        // 创建表格行元素（修复原代码中未定义row的问题）
+        const row = document.createElement('tr');
+        
+        // 处理 expire_time 为 null 的情况（默认视为未过期）
+        const isExpired = ad.expire_time 
+          ? new Date(ad.expire_time) < new Date() 
+          : false;
+        
+        // 格式化时间为友好的本地时间
+        const formattedTime = ad.open_time 
+          ? new Date(ad.open_time).toLocaleString('zh-CN', { 
+              year: 'numeric', 
+              month: '2-digit', 
+              day: '2-digit', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }) 
+          : '未知时间';
+        
+        row.innerHTML = `
+          <td class="checkbox-column">
+            <input type="checkbox" class="ad-checkbox" data-id="${ad.id}">
+          </td>
+          <td>${ad.id}</td>
+          <td>${ad.server_name || '未命名'}</td>
+          <td>${formattedTime}</td>
+          <td><span class="badge badge-${ad.area}">${getAreaName(ad.area)}</span></td>
+          <td><span class="badge ${isExpired ? 'badge-danger' : 'badge-primary'}">${isExpired ? '已过期' : '正常'}</span></td>
+          <td class="action-buttons">
+            <button class="btn btn-secondary btn-sm edit-btn" data-id="${ad.id}">编辑</button>
+            <button class="btn btn-danger btn-sm delete-btn" data-id="${ad.id}">删除</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+      
+      // 重新绑定事件
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.onclick = () => editAd(btn.dataset.id);
+      });
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.onclick = () => deleteAd(btn.dataset.id);
+      });
+      document.querySelectorAll('.ad-checkbox').forEach(checkbox => {
+        checkbox.onchange = (e) => handleCheckboxChange(e.target);
+      });
+
+      // 重置选中状态
+      selectedIds.clear();
+      updateSelectedCount();
+      document.getElementById('selectAll').checked = false;
+    }
+
+    /**
+     * 编辑广告
+     * @param {number} adId - 广告ID
+     */
+    function editAd(adId) {
+      openModal(adId);
+    }
+
+    /**
+     * 打开编辑弹窗
+     * @param {number|null} adId - 广告ID，为null时表示新增
+     */
+    function openModal(adId = null) {
+      const modal = document.getElementById('adModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const adForm = document.getElementById('adForm');
+      
+      // 重置表单
+      adForm.reset();
+      document.getElementById('adId').value = '';
+      
+      if (adId) {
+        // 编辑已有广告
+        modalTitle.textContent = '编辑广告';
+        const ad = allAds.find(a => a.id == adId);
+        if (ad) {
+          document.getElementById('adId').value = ad.id;
+          document.getElementById('serverName').value = ad.server_name || '';
+          document.getElementById('openTime').value = formatDateTimeForInput(ad.open_time);
+          document.getElementById('feature').value = ad.feature || '';
+          document.getElementById('expRate').value = ad.exp_rate || '';
+          document.getElementById('version').value = ad.version || '';
+          document.getElementById('homepage').value = ad.homepage || '';
+          document.getElementById('displayDuration').value = ad.display_duration || 24;
+          document.getElementById('area').value = ad.area || 'white';
+        }
+      } else {
+        // 新增广告
+        modalTitle.textContent = '发布新广告';
+        // 设置默认时间为当前时间加1小时
+        const defaultTime = new Date();
+        defaultTime.setHours(defaultTime.getHours() + 1);
+        document.getElementById('openTime').value = formatDateTimeForInput(defaultTime);
+      }
+      
+      modal.classList.add('show');
+    }
+
+    /**
+     * 关闭弹窗
+     */
+    function closeModal() {
+      const modal = document.getElementById('adModal');
+      modal.classList.remove('show');
+    }
+
+    /**
+     * 保存广告（新增或编辑）
+     */
+    async function saveAd() {
+      const adId = document.getElementById('adId').value;
+      const isEdit = !!adId;
+      
+      // 获取表单元素并验证
+      const serverNameInput = document.getElementById('serverName');
+      const openTimeInput = document.getElementById('openTime');
+      const serverName = serverNameInput.value.trim();
+      const openTime = openTimeInput.value.trim();
+      
+      // 收集表单数据
+// 修正字段名和验证逻辑
+const formData = {
+  serverName: serverName,  // 驼峰命名，与后端一致
+  openTime: openTime,      // 驼峰命名，与后端一致
+  feature: document.getElementById('feature').value.trim(),
+  expRate: document.getElementById('expRate').value.trim(),  // 驼峰命名
+  version: document.getElementById('version').value.trim(),
+  homepage: document.getElementById('homepage').value.trim(),
+  displayDuration: parseInt(document.getElementById('displayDuration').value) || 24,  // 驼峰命名
+  adArea: document.getElementById('area').value  // 与后端一致
+};
+
+// 表单验证
+let isValid = true;
+let firstInvalidInput = null;
+
+// 检查服务器名（使用正确的字段名 server_name）
+if (!formData.serverName) {  // 用驼峰字段名
+  alert('服务器名不能为空');
+  isValid = false;
+  firstInvalidInput = firstInvalidInput || serverNameInput;
+}
+
+if (!formData.openTime) {  // 用驼峰字段名
+  alert('开机时间不能为空');
+  isValid = false;
+  firstInvalidInput = firstInvalidInput || openTimeInput;
+}
+
+      // 如果验证不通过，聚焦到第一个错误字段
+      if (!isValid && firstInvalidInput) {
+        firstInvalidInput.focus();
+        firstInvalidInput.style.borderColor = '#f44336';
+        setTimeout(() => {
+          firstInvalidInput.style.borderColor = '';
+        }, 3000);
+        return;
+      }
+      
+      try {
+        let url = API_BASE_URL;
+        let method = 'POST';
+        
+        // 编辑模式
+        if (isEdit) {
+          url = `${API_BASE_URL}/${adId}`;
+          method = 'PUT';
+        }
+        
+        // 发送请求到后端
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        
+        // 处理非JSON响应
+        let result;
+        try {
+          result = await response.json();
+        } catch (e) {
+          throw new Error(`服务器返回格式错误: ${e.message}`);
+        }
+        
+        if (!response.ok || result.code !== 200) {
+          throw new Error(result.error || `操作失败: ${response.statusText}`);
+        }
+        
+        // 操作成功，重新加载数据并关闭弹窗
+        closeModal();
+        loadAdData();
+        
+        // 显示成功提示
+        alert(isEdit ? '广告更新成功' : '广告发布成功');
+        
+      } catch (error) {
+        console.error('保存广告失败:', error);
+        alert(`保存失败: ${error.message}`);
+      }
+    }
+
+    /**
+     * 删除单个广告
+     * @param {number} adId - 广告ID
+     */
+    async function deleteAd(adId) {
+      if (!confirm(`确定要删除ID为${adId}的广告吗？`)) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/${adId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok || result.code !== 200) {
+          throw new Error(result.error || `删除失败: ${response.statusText}`);
+        }
+        
+        // 删除成功，重新加载数据
+        loadAdData();
+        
+      } catch (error) {
+        console.error('删除广告失败:', error);
+        alert(`删除失败: ${error.message}`);
+      }
+    }
+
+    /**
+     * 批量删除广告
+     */
+    async function batchDeleteAds() {
+      if (selectedIds.size === 0) {
+        alert('请先选择要删除的广告');
+        return;
+      }
+      
+      if (!confirm(`确定要删除选中的${selectedIds.size}条广告吗？`)) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/batch-delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ids: Array.from(selectedIds) }),
+          credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok || result.code !== 200) {
+          throw new Error(result.error || `批量删除失败: ${response.statusText}`);
+        }
+        
+        // 批量删除成功，重新加载数据
+        loadAdData();
+        
+      } catch (error) {
+        console.error('批量删除广告失败:', error);
+        alert(`批量删除失败: ${error.message}`);
+      }
+    }
+
+    /**
+     * 筛选广告
+     */
+    function filterAds() {
+      const searchText = document.getElementById('searchInput').value.trim().toLowerCase();
+      const areaFilter = document.getElementById('areaFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      let filteredAds = [...allAds];
+      
+      // 按搜索文本筛选
+      if (searchText) {
+        filteredAds = filteredAds.filter(ad => 
+          ad.server_name?.toLowerCase().includes(searchText)
+        );
+      }
+      
+      // 按区域筛选
+      if (areaFilter) {
+        filteredAds = filteredAds.filter(ad => ad.area === areaFilter);
+      }
+      
+      // 按状态筛选
+      if (statusFilter === 'expired') {
+        filteredAds = filteredAds.filter(ad => 
+          ad.expire_time ? new Date(ad.expire_time) < new Date() : false
+        );
+      }
+      
+      renderAdTable(filteredAds);
+    }
+
+    /**
+     * 处理全选
+     */
+    function handleSelectAll(e) {
+      const isChecked = e.target.checked;
+      const checkboxes = document.querySelectorAll('.ad-checkbox');
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = isChecked;
+        handleCheckboxChange(checkbox, true);
+      });
+    }
+
+    /**
+     * 处理复选框变化
+     * @param {HTMLInputElement} checkbox - 复选框元素
+     * @param {boolean} skipSelectAllCheck - 是否跳过全选状态检查
+     */
+    function handleCheckboxChange(checkbox, skipSelectAllCheck = false) {
+      const adId = parseInt(checkbox.dataset.id);
+      
+      if (checkbox.checked) {
+        selectedIds.add(adId);
+      } else {
+        selectedIds.delete(adId);
+      }
+      
+      updateSelectedCount();
+      
+      // 检查是否需要更新全选框状态
+      if (!skipSelectAllCheck) {
+        const checkboxes = document.querySelectorAll('.ad-checkbox');
+        const allChecked = checkboxes.length > 0 && 
+                          Array.from(checkboxes).every(cb => cb.checked);
+        document.getElementById('selectAll').checked = allChecked;
+      }
+    }
+
+    /**
+     * 更新选中数量显示
+     */
+    function updateSelectedCount() {
+      const countElement = document.getElementById('selectedCount');
+      const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+      
+      countElement.textContent = `已选择 ${selectedIds.size} 项`;
+      batchDeleteBtn.disabled = selectedIds.size === 0;
+    }
+
+    /**
+     * 获取区域名称（中文）
+     * @param {string} areaCode - 区域代码
+     * @returns {string} 区域中文名称
+     */
+    function getAreaName(areaCode) {
+      const areaMap = {
+        'top-yellow': '置顶黄',
+        'white': '白色',
+        'orange': '橙色',
+        'green': '绿色'
+      };
+      return areaMap[areaCode] || areaCode;
+    }
+
+    /**
+     * 格式化时间为input的datetime-local格式
+     * @param {string|Date} date - 日期时间
+     * @returns {string} 格式化后的字符串
+     */
+    function formatDateTimeForInput(date) {
+      if (!date) return '';
+      try {
+        const d = new Date(date);
+        // 检查是否为有效日期
+        if (isNaN(d.getTime())) {
+          return '';
+        }
+        return d.toISOString().slice(0, 16);
+      } catch (e) {
+        console.error('日期格式化错误:', e);
+        return '';
+      }
+    }
+  </script>
+</body>
+</html>
