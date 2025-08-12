@@ -3,242 +3,374 @@
 <head>
   <meta charset="UTF-8">
   <title>游戏开服表</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- 添加Font Awesome图标库以支持加载动画 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* 补充必要的基础样式 */
+    /* 保持原有样式，新增表格列宽基础类 */
+    .col-15 { width: 15%; }   /* 服务器名/开机时间 */
+    .col-42 { width: 42%; }   /* 游戏版本特色介绍 */
+    .col-8 { width: 8%; }     /* 经验 */
+    .col-10 { width: 10%; }   /* 版本/游戏主页 */
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "SimHei", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+    }
+    
+    body {
+      background-color: #2e220a; /* 表格外容器背景色 - 深棕色 */
+      color: #333;
+      line-height: 1.5;
+    }
+    
+    a {
+      text-decoration: none;
+    }
+    
+    a:hover {
+      text-decoration: underline;
+    }
+    
     .btn-enter {
-      padding: 4px 8px;
-      background-color: #28a745;
+      display: inline-block;
+      padding: 2px 6px;
+      background-color: #FF6600;
       color: white;
       text-decoration: none;
-      border-radius: 4px;
+      border-radius: 2px;
       font-size: 12px;
+      font-family: "SimSun", serif;
+      border: 1px solid #E55A00;
+      font-weight: normal;
     }
+    
+    .btn-enter:hover {
+      background-color: #FF8800;
+      color: white;
+      text-decoration: none;
+    }
+    
     .loading {
       text-align: center;
       color: #666;
       padding: 10px;
+      font-family: "SimSun", serif;
+      font-size: 12px;
+      font-weight: normal;
     }
-    /* 统一所有区域的布局样式，取消间距实现无缝连接 */
-    .ad-section {
-      margin: 0 auto; /* 取消上下外边距，实现无缝连接 */
-      padding: 15px;
-      border-radius: 0; /* 取消圆角，增强无缝感 */
-      max-width: 1100px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    /* 各区域颜色区分 */
-    .top-yellow {
-      background-color: #fff9c4; /* 置顶黄区域 */
-      border: 1px solid #ffe082;
-      border-bottom: none; /* 取消底部边框，增强无缝感 */
-    }
-    .white-area {
-      background-color: #f9f9f9; /* 白色区域 */
-      border: 1px solid #e0e0e0;
-      border-top: none; /* 取消顶部边框，增强无缝感 */
-      border-bottom: none; /* 取消底部边框，增强无缝感 */
-    }
-    .orange-area {
-      background-color: #fff3e0; /* 橙色区域 */
-      border: 1px solid #ffcc80;
-      border-top: none; /* 取消顶部边框，增强无缝感 */
-      border-bottom: none; /* 取消底部边框，增强无缝感 */
-    }
-    .green-area {
-      background-color: #e8f5e9; /* 绿色区域 */
-      border: 1px solid #a5d6a7;
-      border-top: none; /* 取消顶部边框，增强无缝感 */
-    }
-    .server-table {
+    
+    .container-1200 {
+      max-width: 1000px;
+      margin: 0 auto;
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
+      padding: 0 10px;
     }
-    .server-table th, .server-table td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
+    
+    .ad-container {
+      padding: 0;
+      border-left: 1px solid #ddd;
+      border-right: 1px solid #ddd;
+      overflow-x: auto;
     }
-    .server-table th {
-      background-color: rgba(0,0,0,0.05);
-      font-weight: bold;
-    }
-    .server-table tr:hover {
-      background-color: rgba(0,0,0,0.02);
-    }
-    /* 顶部和底部横幅样式 - 确保与广告区域宽度一致 */
-    .top-banner, .bottom-banner {
-      width: 100%;
-      background-size: cover;
-      background-position: center;
-      padding: 20px 0;
+    
+    .top-info {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      padding: 8px 0;
       text-align: center;
     }
-    .banner-info, .bottom-text {
-      max-width: 1100px; /* 与广告区域最大宽度一致 */
-      margin: 0 auto;
-      padding: 0 15px; /* 与广告区域内边距一致 */
+    
+    .top-info p {
+      color: #333;
+      font-weight: bold;
+    }
+    
+    .top-banner {
+      background-color: #FFFFFF;
+      background-image: url('top-banner.jpg');
+      background-size: cover;
+      background-position: center;
+      border: 1px solid #ddd;
+      border-top: none;
+      padding: 40px 0;
+      min-height: 120px;
+    }
+    
+    .ad-section {
+      width: 100%;
+      padding: 0;
+      border: none;
+    }
+    
+    .section-title {
+      color: #C00;
+      font-weight: bold;
+      padding: 5px 10px;
+      font-size: 15px;
+      background-color: #FFF0F0;
+      border-bottom: 1px solid #FFCCCC;
+      margin: 0;
+    }
+    
+    /* 区域背景色定义 */
+    .top-yellow {
+      background-color: #FFFFE0;
+    }
+    
+    .white-area {
+      background-color: #FFFFFF;
+    }
+    
+    .orange-area {
+      background-color: #FFF8E0;
+    }
+    
+    .green-area {
+      background-color: #E8F5E9;
+    }
+    
+    .server-table {
+      width: 100%;
+      min-width: 1000px; /* 固定最小宽度 */
+      border-collapse: collapse;
+      table-layout: fixed; /* 关键：固定布局，确保列宽严格按设定显示 */
+      border: none;
+    }
+    
+    .full-table th,
+    .full-table td {
+      padding: 0 8px;
+      text-align: center;
+      border: 1px solid #ddd;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: "SimSun", serif !important;
+      font-size: 12px !important;
+      font-weight: normal !important;
+      height: 25px;
+      line-height: 25px;
+    }
+    
+    /* 表头背景色 - 使用图片背景 */
+    .full-table th {
+      background: url(../images1/qq.jpg);
+      color: #A84200;
+      font-weight: bold !important;
+    }
+    
+    /* 行背景色和鼠标悬停效果 */
+    .top-yellow .full-table tr {
+      background-color: #FFFF00;
+    }
+    
+    .white-area .full-table tr {
+      background-color: #FFFFFF;
+    }
+    
+    .orange-area .full-table tr {
+      background-color: #FFFF00;
+    }
+    
+    .green-area .full-table tr {
+      background-color: #d6ff52;
+    }
+    
+    /* 鼠标悬停效果 */
+    .top-yellow .full-table tr:hover {
+      background-color: #B0E0E6;
+    }
+    
+    .white-area .full-table tr:hover,
+    .orange-area .full-table tr:hover,
+    .green-area .full-table tr:hover {
+      background-color: #ffccff;
+    }
+    
+    .server-name {
+      font-family: "SimSun", serif !important;
+      font-size: 12px !important;
+      font-weight: normal !important;
+    }
+    
+    .tag {
+      display: inline-block;
+      padding: 0 3px;
+      margin: 0 2px;
+      background-color: #FFFFCC;
+      border: 1px dashed #FFCC66;
+      font-size: 12px !important;
+      font-family: "SimSun", serif !important;
+      font-weight: normal !important;
+    }
+    
+    .bottom-banner {
+      background-color: #FFFFFF;
+      border: 1px solid #ddd;
+      border-top: none;
+      padding: 10px 0;
+      text-align: center;
+    }
+    
+    .bottom-text {
+      font-size: 12px;
+      color: #666;
+      padding: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .top-banner {
+        padding: 20px 0;
+      }
+      
+      .section-title {
+        font-size: 14px;
+        padding: 5px 8px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- 顶部背景图区域 -->
-  <div class="top-banner">
-    <div class="banner-info">
-      <p>制作联系QQ: 2653920258</p>
-    </div>
-  </div>
-
-  <!-- 广告区域容器：包含所有服务器区域 -->
-  <div class="ad-container">
-    <!-- 推荐服务器区域：黄色背景 -->
-    <div class="ad-section top-yellow">
-      <table class="server-table">
-        <thead>
-          <tr>
-            <th>服务器名称</th>
-            <th>开服时间</th>
-            <th>版本特色</th>
-            <th>经验倍率</th>
-            <th>版本号</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="top-yellow-list">
-          <!-- 加载状态 -->
-          <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
-        </tbody>
-      </table>
+  <div class="container-1200">
+    <div class="top-info">
+      <p>制作联系QQ: 2653920258 | 奇迹游戏开服表 | 每日更新最新开服信息</p>
     </div>
 
-    <!-- 白色区域服务器 -->
-    <div class="ad-section white-area">
-      <table class="server-table">
-        <thead>
-          <tr>
-            <th>服务器名称</th>
-            <th>开服时间</th>
-            <th>版本特色</th>
-            <th>经验倍率</th>
-            <th>版本号</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="white-area-list">
-          <!-- 加载状态 -->
-          <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
-        </tbody>
-      </table>
+    <div class="top-banner"></div>
+
+    <div class="ad-container">
+      <!-- 01广告区域 - 黄色区域（保留表头） -->
+      <div class="ad-section top-yellow">
+        <div class="section-title">↓以下为本站强力推荐(20条)长久稳定品牌大区→</div>
+        <table class="server-table full-table">
+          <thead>
+            <tr>
+              <th class="col-15">服务器名</th>
+              <th class="col-15">开机时间</th>
+              <th class="col-42">游戏版本特色介绍</th>
+              <th class="col-8">经验</th>
+              <th class="col-10">版本</th>
+              <th class="col-10">游戏主页</th>
+            </tr>
+          </thead>
+          <tbody id="top-yellow-list">
+            <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 02广告区域 - 白色区域（隐藏表头，保持列宽） -->
+      <div class="ad-section white-area">
+        <table class="server-table full-table">
+          <thead style="display: none;">
+            <tr>
+              <th class="col-15"></th>
+              <th class="col-15"></th>
+              <th class="col-42"></th>
+              <th class="col-8"></th>
+              <th class="col-10"></th>
+              <th class="col-10"></th>
+            </tr>
+          </thead>
+          <tbody id="white-area-list">
+            <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 03广告区域 - 橙色区域（隐藏表头，保持列宽） -->
+      <div class="ad-section orange-area">
+        <table class="server-table full-table">
+          <thead style="display: none;">
+            <tr>
+              <th class="col-15"></th>
+              <th class="col-15"></th>
+              <th class="col-42"></th>
+              <th class="col-8"></th>
+              <th class="col-10"></th>
+              <th class="col-10"></th>
+            </tr>
+          </thead>
+          <tbody id="orange-area-list">
+            <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 04广告区域 - 绿色区域（隐藏表头，保持列宽） -->
+      <div class="ad-section green-area">
+        <table class="server-table full-table">
+          <thead style="display: none;">
+            <tr>
+              <th class="col-15"></th>
+              <th class="col-15"></th>
+              <th class="col-42"></th>
+              <th class="col-8"></th>
+              <th class="col-10"></th>
+              <th class="col-10"></th>
+            </tr>
+          </thead>
+          <tbody id="green-area-list">
+            <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- 橙色区域服务器 -->
-    <div class="ad-section orange-area">
-      <table class="server-table">
-        <thead>
-          <tr>
-            <th>服务器名称</th>
-            <th>开服时间</th>
-            <th>版本特色</th>
-            <th>经验倍率</th>
-            <th>版本号</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="orange-area-list">
-          <!-- 加载状态 -->
-          <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 绿色区域服务器 -->
-    <div class="ad-section green-area">
-      <table class="server-table">
-        <thead>
-          <tr>
-            <th>服务器名称</th>
-            <th>开服时间</th>
-            <th>版本特色</th>
-            <th>经验倍率</th>
-            <th>版本号</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="green-area-list">
-          <!-- 加载状态 -->
-          <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- 底部区域 -->
-  <div class="bottom-banner">
-    <div class="bottom-text">
-      <p>© 2023 游戏开服表 版权所有 | 联系我们：2653920258</p>
-      <p>免责声明：本网站内容仅供参考，具体以游戏实际内容为准</p>
+    <div class="bottom-banner">
+      <div class="bottom-text">
+        <p>© 2023 游戏开服表 版权所有 | 联系我们：2653920258</p>
+        <p>免责声明：本网站内容仅供参考，具体以游戏实际内容为准</p>
+      </div>
     </div>
   </div>
 
   <script>
-    // API基础地址
     const API_BASE_URL = 'http://localhost:3000/api';
-    let allAds = []; // 存储所有广告数据
+    let allAds = [];
 
-    // 页面加载完成后初始化
     document.addEventListener('DOMContentLoaded', () => {
-      // 加载广告数据
       loadAds();
     });
 
-    /**
-     * 从后端加载广告数据
-     */
     async function loadAds() {
       try {
+        ['top-yellow-list', 'white-area-list', 'orange-area-list', 'green-area-list'].forEach(areaId => {
+          document.getElementById(areaId).innerHTML = 
+            '<tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>';
+        });
+
         const response = await fetch(`${API_BASE_URL}/ads?page=1&pageSize=100`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
-          },
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP错误状态: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
         const result = await response.json();
 
-        // 验证返回数据格式
-        if (result.code !== 200 || !result.data?.list || !Array.isArray(result.data.list)) {
-          throw new Error('数据格式错误或无数据');
+        if (result.code !== 200 || !Array.isArray(result.data?.list)) {
+          throw new Error('数据格式错误，预期数组类型');
         }
-
+        
         allAds = result.data.list;
         renderAdsByArea();
 
       } catch (error) {
-        console.error('加载广告失败:', error);
-        // 显示错误信息
-        const areas = ['top-yellow-list', 'white-area-list', 'orange-area-list', 'green-area-list'];
-        areas.forEach(areaId => {
+        console.error('加载失败:', error);
+        const errorMsg = error.message || '未知错误';
+        ['top-yellow-list', 'white-area-list', 'orange-area-list', 'green-area-list'].forEach(areaId => {
           document.getElementById(areaId).innerHTML = 
-            `<tr><td colspan="6" style="color: red;">加载失败: ${error.message}</td></tr>`;
+            `<tr><td colspan="6" style="color: red;">加载失败: ${errorMsg}</td></tr>`;
         });
       }
     }
 
-    /**
-     * 按区域渲染广告
-     */
     function renderAdsByArea() {
-      // 按区域分类广告
       const adsByArea = {
         'top_yellow': [],
         'white_area': [],
@@ -247,61 +379,81 @@
       };
 
       allAds.forEach(ad => {
-        if (adsByArea.hasOwnProperty(ad.area)) {
+        if (typeof ad === 'object' && ad !== null && adsByArea.hasOwnProperty(ad.area)) {
           adsByArea[ad.area].push(ad);
         }
       });
 
-      // 渲染各区域广告
-      renderAreaAds('top-yellow-list', adsByArea.top_yellow);
-      renderAreaAds('white-area-list', adsByArea.white_area);
-      renderAreaAds('orange-area-list', adsByArea.orange_area);
-      renderAreaAds('green-area-list', adsByArea.green_area);
+      renderFullAreaAds('top-yellow-list', adsByArea.top_yellow);
+      renderFullAreaAds('white-area-list', adsByArea.white_area);
+      renderFullAreaAds('orange-area-list', adsByArea.orange_area);
+      renderFullAreaAds('green-area-list', adsByArea.green_area);
     }
 
-    /**
-     * 渲染特定区域的广告
-     */
-    function renderAreaAds(areaId, ads) {
+    function renderFullAreaAds(areaId, ads) {
       const tbody = document.getElementById(areaId);
       
-      if (ads.length === 0) {
+      if (!tbody) {
+        console.error(`未找到ID为${areaId}的元素`);
+        return;
+      }
+      
+      if (!Array.isArray(ads) || ads.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="loading">暂无数据</td></tr>';
         return;
       }
 
-      // 按开服时间排序
-      ads.sort((a, b) => new Date(a.open_time) - new Date(b.open_time));
+      ads.sort((a, b) => {
+        const dateA = a.open_time ? new Date(a.open_time).getTime() : 0;
+        const dateB = b.open_time ? new Date(b.open_time).getTime() : 0;
+        return dateB - dateA;
+      });
       
       tbody.innerHTML = ads.map(ad => {
-        // 检查是否过期
-        const isExpired = ad.expire_time && new Date(ad.expire_time) < new Date();
+        let featureHtml = ad.feature || '';
+        if (typeof featureHtml === 'string') {
+          featureHtml = featureHtml.replace(/【([^】]+)】/g, (match, text) => {
+            const tagColor = ad.tagColor || '#000'; 
+            return `<span class="tag" style="color: ${tagColor}">【${text}】</span>`;
+          });
+        }
+
+        const isExpired = ad.expired || (ad.expire_time && new Date(ad.expire_time) < new Date());
         
         return `
           <tr ${isExpired ? 'style="opacity: 0.6;"' : ''}>
-            <td>${ad.server_name || '未命名'}</td>
-            <td>
+            <td class="col-15">
+              <span class="server-name" style="color: ${ad.serverNameColor || '#000080'}">
+                ${ad.server_name || '未命名'}
+              </span>
+            </td>
+            <td class="col-15" style="color: ${ad.timeColor || '#000'}">
               ${formatDateTime(ad.open_time)}
               ${isExpired ? '<span style="color: red; margin-left: 5px;">(已过期)</span>' : ''}
             </td>
-            <td>${ad.feature || '-'}</td>
-            <td>${ad.exp_rate || '-'}</td>
-            <td>${ad.version || '-'}</td>
-            <td>
-              <a href="${ad.homepage || '#'}" target="_blank" class="btn-enter">进入游戏</a>
+            <td class="col-42">${featureHtml}</td>
+            <td class="col-8" style="color: ${ad.expColor || '#000'}">${ad.exp_rate || '-'}</td>
+            <td class="col-10" style="color: ${ad.versionColor || '#000'}">${ad.version || '-'}</td>
+            <td class="col-10">
+              <a href="${ad.homepage || '#'}" target="_blank" 
+                 class="btn-enter" 
+                 style="color: ${ad.linkTextColor || 'white'}">
+                点击查看
+              </a>
             </td>
           </tr>
         `;
       }).join('');
     }
 
-    /**
-     * 格式化日期时间为本地字符串
-     */
     function formatDateTime(dateString) {
-      if (!dateString) return '未知时间';
+      if (!dateString || typeof dateString !== 'string') return '未知时间';
       try {
-        return new Date(dateString).toLocaleString('zh-CN', {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+          return dateString;
+        }
+        return date.toLocaleString('zh-CN', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -309,23 +461,11 @@
           minute: '2-digit'
         });
       } catch (e) {
+        console.error('日期格式化错误:', e);
         return dateString;
-      }
-    }
-
-    /**
-     * 格式化日期时间为input的datetime-local格式
-     */
-    function formatDateTimeForInput(date) {
-      if (!date) return '';
-      try {
-        const d = new Date(date);
-        if (isNaN(d.getTime())) return '';
-        return d.toISOString().slice(0, 16);
-      } catch (e) {
-        return '';
       }
     }
   </script>
 </body>
 </html>
+    
