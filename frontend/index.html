@@ -361,9 +361,15 @@
         'green_area': []
       };
 
+      // 过滤掉已过期的广告
       allAds.forEach(ad => {
         if (typeof ad === 'object' && ad !== null && adsByArea.hasOwnProperty(ad.area)) {
-          adsByArea[ad.area].push(ad);
+          // 检查广告是否过期
+          const isExpired = ad.expired || (ad.expire_time && new Date(ad.expire_time) < new Date());
+          // 只添加未过期的广告
+          if (!isExpired) {
+            adsByArea[ad.area].push(ad);
+          }
         }
       });
 
@@ -401,10 +407,8 @@
           });
         }
 
-        const isExpired = ad.expired || (ad.expire_time && new Date(ad.expire_time) < new Date());
-        
         return `
-          <tr ${isExpired ? 'style="opacity: 0.6;"' : ''}>
+          <tr>
             <td class="col-15">
               <span class="server-name" style="color: ${ad.serverNameColor || '#000080'}">
                 ${ad.server_name || '未命名'}
@@ -412,7 +416,6 @@
             </td>
             <td class="col-15" style="color: ${ad.timeColor || '#000'}">
               ${formatDateTime(ad.open_time)}
-              ${isExpired ? '<span style="color: red; margin-left: 5px;">(已过期)</span>' : ''}
             </td>
             <td class="col-42">${featureHtml}</td>
             <td class="col-8" style="color: ${ad.expColor || '#000'}">${ad.exp_rate || '-'}</td>
@@ -451,11 +454,12 @@
 
     // 模拟数据加载
     function loadMockData() {
+      const now = new Date();
       const mockData = {
         'top_yellow': [
           {
             server_name: "奇迹1区",
-            open_time: new Date().toISOString(),
+            open_time: now.toISOString(),
             feature: "【新开服】【高爆率】【长久稳定】",
             exp_rate: "10倍",
             version: "经典版",
@@ -465,7 +469,7 @@
           },
           {
             server_name: "奇迹2区",
-            open_time: new Date(Date.now() - 3600000).toISOString(),
+            open_time: new Date(now.getTime() - 3600000).toISOString(),
             feature: "【人气火爆】【福利多】",
             exp_rate: "5倍",
             version: "怀旧版",
@@ -475,7 +479,7 @@
         'white_area': [
           {
             server_name: "奇迹3区",
-            open_time: new Date(Date.now() - 7200000).toISOString(),
+            open_time: new Date(now.getTime() - 7200000).toISOString(),
             feature: "【新区】【活动多】",
             exp_rate: "8倍",
             version: "加强版",
@@ -484,8 +488,9 @@
         ],
         'orange_area': [
           {
-            server_name: "奇迹4区",
-            open_time: new Date(Date.now() - 10800000).toISOString(),
+            server_name: "奇迹4区",  // 这个会被过滤掉，因为设置了过期时间
+            open_time: new Date(now.getTime() - 10800000).toISOString(),
+            expire_time: new Date(now.getTime() - 3600000).toISOString(),
             feature: "【独家】【稳定运营】",
             exp_rate: "15倍",
             version: "变态版",
@@ -495,7 +500,7 @@
         'green_area': [
           {
             server_name: "奇迹5区",
-            open_time: new Date(Date.now() - 14400000).toISOString(),
+            open_time: new Date(now.getTime() - 14400000).toISOString(),
             feature: "【公益】【无套路】",
             exp_rate: "3倍",
             version: "纯净版",
@@ -512,4 +517,3 @@
   </script>
 </body>
 </html>
-    
