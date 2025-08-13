@@ -327,7 +327,7 @@ app.post('/api/ads/batch-delete', async (req, res) => {
   }
 });
 
-// 7. 单个广告续期 - 新增接口
+// 7. 单个广告续期 - 修复版
 app.post('/api/ads/:id/renew', async (req, res) => {
   try {
     const id = req.params.id;
@@ -344,13 +344,12 @@ app.post('/api/ads/:id/renew', async (req, res) => {
       return res.status(404).json({ code: 404, error: '广告不存在' });
     }
     
-    // 续期逻辑：增加展示时长，同时调整open_time以保持expire_time正确计算
+    // 修复续期逻辑：只增加展示时长，不调整开机时间
     await pool.execute(
       `UPDATE ads SET 
-        display_duration = display_duration + ?,
-        open_time = DATE_SUB(open_time, INTERVAL ? HOUR)
+        display_duration = display_duration + ?
        WHERE id = ?`,
-      [displayDuration, displayDuration, id]
+      [displayDuration, id]
     );
     
     res.json({ code: 200, message: `广告已成功续期${displayDuration}小时` });
@@ -360,7 +359,7 @@ app.post('/api/ads/:id/renew', async (req, res) => {
   }
 });
 
-// 8. 批量续期广告 - 修正参数
+// 8. 批量续期广告 - 修复版
 app.post('/api/ads/batch-renew', async (req, res) => {
   try {
     const { ids, displayDuration } = req.body;
@@ -371,12 +370,12 @@ app.post('/api/ads/batch-renew', async (req, res) => {
     
     // 构建参数化查询
     const placeholders = ids.map(() => '?').join(',');
+    // 修复续期逻辑：只增加展示时长，不调整开机时间
     await pool.execute(
       `UPDATE ads SET 
-        display_duration = display_duration + ?,
-        open_time = DATE_SUB(open_time, INTERVAL ? HOUR)
+        display_duration = display_duration + ?
        WHERE id IN (${placeholders})`,
-      [displayDuration, displayDuration, ...ids]
+      [displayDuration, ...ids]
     );
     
     res.json({ code: 200, message: `成功为${ids.length}条广告续期${displayDuration}小时` });
