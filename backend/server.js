@@ -1,4 +1,3 @@
-// 完整的广告管理系统后端代码
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -202,19 +201,18 @@ app.get('/api/ads/:id', async (req, res) => {
 });
 
 // 3. 创建新广告
-// 修改创建广告接口的参数处理部分
 app.post('/api/ads', async (req, res) => {
   try {
     const {
       serverName,
       openTime,
-      feature = '',  // 设置默认值为空字符串
+      feature = '',
       expRate = '',
       version = '',
       homepage = '',
-      displayDuration = 24,  // 设置默认值
-      adArea = 'white'       // 设置默认值
-    } = req.body;  // 从req.body中解构参数，并设置默认值
+      displayDuration = 24,
+      adArea = 'white'
+    } = req.body;
     
     // 验证必填字段
     if (!serverName || !openTime) {
@@ -242,6 +240,7 @@ app.post('/api/ads', async (req, res) => {
     res.status(500).json({ code: 500, error: '创建广告失败' });
   }
 });
+
 // 4. 更新广告
 app.put('/api/ads/:id', async (req, res) => {
   try {
@@ -249,13 +248,13 @@ app.put('/api/ads/:id', async (req, res) => {
     const {
       serverName,
       openTime,
-      feature = '',  // 添加默认值
-      expRate = '',  // 添加默认值
-      version = '',  // 添加默认值
-      homepage = '', // 添加默认值
-      displayDuration = 24,  // 添加默认值
-      adArea = 'white'       // 添加默认值
-    } = req.body;  // 解构时添加默认值
+      feature = '',
+      expRate = '',
+      version = '',
+      homepage = '',
+      displayDuration = 24,
+      adArea = 'white'
+    } = req.body;
     
     // 验证必填字段
     if (!serverName || !openTime) {
@@ -328,17 +327,47 @@ app.post('/api/ads/batch-delete', async (req, res) => {
   }
 });
 
-// 7. 批量续期广告
-app.post('/api/ads/batch-renew', async (req, res) => {
+// 7. 单个广告续期 - 新增接口
+app.post('/api/ads/:id/renew', async (req, res) => {
   try {
-    const { ids, days } = req.body;
+    const id = req.params.id;
+    const { displayDuration } = req.body;
     
-    if (!Array.isArray(ids) || ids.length === 0 || !days) {
-      return res.status(400).json({ code: 400, error: '请提供要续期的广告ID列表和续期天数' });
+    // 验证参数
+    if (!displayDuration || displayDuration <= 0) {
+      return res.status(400).json({ code: 400, error: '请提供有效的续期时长（小时）' });
     }
     
-    // 转换天数为小时
-    const hours = days * 24;
+    // 检查广告是否存在
+    const [rows] = await pool.execute('SELECT * FROM ads WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ code: 404, error: '广告不存在' });
+    }
+    
+    // 续期逻辑：增加展示时长，同时调整open_time以保持expire_time正确计算
+    await pool.execute(
+      `UPDATE ads SET 
+        display_duration = display_duration + ?,
+        open_time = DATE_SUB(open_time, INTERVAL ? HOUR)
+       WHERE id = ?`,
+      [displayDuration, displayDuration, id]
+    );
+    
+    res.json({ code: 200, message: `广告已成功续期${displayDuration}小时` });
+  } catch (error) {
+    console.error('广告续期失败:', error);
+    res.status(500).json({ code: 500, error: '广告续期失败' });
+  }
+});
+
+// 8. 批量续期广告 - 修正参数
+app.post('/api/ads/batch-renew', async (req, res) => {
+  try {
+    const { ids, displayDuration } = req.body;
+    
+    if (!Array.isArray(ids) || ids.length === 0 || !displayDuration || displayDuration <= 0) {
+      return res.status(400).json({ code: 400, error: '请提供要续期的广告ID列表和有效的续期时长（小时）' });
+    }
     
     // 构建参数化查询
     const placeholders = ids.map(() => '?').join(',');
@@ -347,10 +376,10 @@ app.post('/api/ads/batch-renew', async (req, res) => {
         display_duration = display_duration + ?,
         open_time = DATE_SUB(open_time, INTERVAL ? HOUR)
        WHERE id IN (${placeholders})`,
-      [hours, hours, ...ids]
+      [displayDuration, displayDuration, ...ids]
     );
     
-    res.json({ code: 200, message: `成功为${ids.length}条广告续期${days}天` });
+    res.json({ code: 200, message: `成功为${ids.length}条广告续期${displayDuration}小时` });
   } catch (error) {
     console.error('批量续期广告失败:', error);
     res.status(500).json({ code: 500, error: '批量续期广告失败' });
@@ -369,5 +398,6 @@ app.listen(port, () => {
   console.log('PUT    /api/ads/:id            - 更新广告');
   console.log('DELETE /api/ads/:id            - 删除单个广告');
   console.log('POST   /api/ads/batch-delete   - 批量删除广告');
+  console.log('POST   /api/ads/:id/renew      - 单个广告续期');
   console.log('POST   /api/ads/batch-renew    - 批量续期广告');
 });
