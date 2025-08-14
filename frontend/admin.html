@@ -6,7 +6,7 @@
     <title>游戏广告管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* 基础样式与科技感主题 */
+        /* 保持原有样式不变 */
         :root {
             --primary: #00a3ff;
             --primary-glow: rgba(0, 163, 255, 0.5);
@@ -48,7 +48,6 @@
             padding: 20px;
         }
 
-        /* 头部样式 */
         h1 {
             color: var(--text-primary);
             margin-bottom: 24px;
@@ -71,70 +70,91 @@
             box-shadow: 0 0 10px var(--primary-glow);
         }
 
-        /* 操作栏 */
-        .operation-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 16px;
-            padding: 16px;
-            background-color: var(--card-bg);
+        /* 表格样式增强 - 确保数据展示清晰 */
+        .ad-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
             border-radius: 8px;
-            border: 1px solid var(--border-color);
+            overflow: hidden;
             box-shadow: var(--shadow);
-            backdrop-filter: blur(8px);
         }
 
-        .search-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+        .ad-table th, .ad-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        /* 按钮样式 */
+        .ad-table th {
+            background-color: var(--card-bg);
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .status-active {
+            color: var(--success);
+            background-color: rgba(16, 185, 129, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .status-expired {
+            color: var(--danger);
+            background-color: rgba(239, 68, 68, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .status-upcoming {
+            color: var(--warning);
+            background-color: rgba(245, 158, 11, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .countdown-warning {
+            color: var(--warning);
+            font-weight: 500;
+        }
+
+        .countdown-danger {
+            color: var(--danger);
+            font-weight: 600;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
         .btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
+            border-radius: 4px;
             border: none;
-            border-radius: 6px;
             cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: var(--transition);
-            font-weight: 500;
-            font-size: 14px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: var(--transition);
-        }
-
-        .btn:hover::before {
-            left: 100%;
         }
 
         .btn-primary {
             background-color: var(--primary);
             color: white;
-            box-shadow: 0 2px 10px var(--primary-glow);
         }
 
         .btn-primary:hover {
-            background-color: #0086d9;
+            background-color: #0081cc;
             box-shadow: var(--glow-shadow);
-            transform: translateY(-1px);
         }
 
         .btn-danger {
@@ -144,1598 +164,796 @@
 
         .btn-danger:hover {
             background-color: #dc2626;
-            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
-            transform: translateY(-1px);
         }
 
-        .btn-secondary {
-            background-color: var(--glass-bg);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-secondary:hover {
-            background-color: rgba(15, 23, 42, 0.6);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .btn-warning {
-            background-color: var(--warning);
-            color: #1e293b;
-        }
-
-        .btn-warning:hover {
-            background-color: #d97706;
-            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
-            transform: translateY(-1px);
-        }
-
-        /* 表单控件 */
-        .form-control {
-            padding: 9px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background-color: var(--glass-bg);
-            color: var(--text-primary);
-            font-size: 14px;
-            transition: var(--transition);
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px var(--primary-glow);
-        }
-
-        .form-control::placeholder {
-            color: var(--text-secondary);
-        }
-
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 32px;
-        }
-
-        /* 表格样式 */
-        .table-container {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
-            backdrop-filter: blur(8px);
-        }
-
-        .table-container:hover {
-            box-shadow: 0 0 20px rgba(0, 163, 255, 0.15);
-        }
-
-        .ad-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .ad-table th, .ad-table td {
-            padding: 14px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            transition: var(--transition);
-        }
-
-        .ad-table th {
-            background-color: rgba(15, 23, 42, 0.9);
-            font-weight: 500;
-            color: var(--text-secondary);
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-        }
-
-        .ad-table th::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            transition: var(--transition);
-        }
-
-        .ad-table th:hover::after {
-            width: 100%;
-        }
-
-        .ad-table tr:hover {
-            background-color: rgba(255, 255, 255, 0.03);
-            transform: translateX(3px);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 6px;
-        }
-
-        /* 状态标签 */
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            color: white;
-            transition: var(--transition);
-        }
-
-        .badge-danger {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        .badge-primary {
-            background-color: rgba(0, 163, 255, 0.2);
-            color: var(--primary);
-            border: 1px solid rgba(0, 163, 255, 0.3);
-        }
-
-        .badge-warning {
-            background-color: rgba(245, 158, 11, 0.2);
-            color: var(--warning);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
-
-        /* 区域背景色样式 - 科技感配色 */
-        .row-top_yellow {
-            background-color: rgba(255, 210, 0, 0.05);
-            background-image: linear-gradient(90deg, rgba(255, 210, 0, 0.05) 0%, transparent 100%);
-        }
-
-        .row-white_area {
-            background-color: rgba(255, 255, 255, 0.02);
-        }
-
-        .row-orange_area {
-            background-color: rgba(255, 153, 0, 0.05);
-            background-image: linear-gradient(90deg, rgba(255, 153, 0, 0.05) 0%, transparent 100%);
-        }
-
-        .row-green_area {
-            background-color: rgba(0, 200, 100, 0.05);
-            background-image: linear-gradient(90deg, rgba(0, 200, 100, 0.05) 0%, transparent 100%);
-        }
-
-        /* 弹窗样式 - 玻璃态设计 */
-        .modal-backdrop {
+        .modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             z-index: 1000;
-            visibility: hidden;
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 20px;
-        }
-
-        .modal-backdrop.show {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .modal {
-            background-color: var(--card-bg);
-            width: 100%;
-            max-width: 650px;
-            border-radius: 10px;
-            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(0, 163, 255, 0.1);
-            border: 1px solid var(--border-color);
-            transform: translateY(20px) scale(0.98);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-            backdrop-filter: blur(12px);
-        }
-
-        .modal-backdrop.show .modal {
-            transform: translateY(0) scale(1);
-            animation: modalPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes modalPopIn {
-            0% { transform: translateY(40px) scale(0.95); opacity: 0; }
-            70% { transform: translateY(-5px) scale(1.02); }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-
-        .modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: rgba(15, 23, 42, 0.9);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .modal-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--text-secondary);
+            visibility: hidden;
             transition: var(--transition);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .close-modal:hover {
-            color: var(--text-primary);
-            background-color: rgba(255, 255, 255, 0.05);
-            transform: rotate(90deg);
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
         }
 
-        .modal-body {
-            padding: 20px;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-
-        .modal-footer {
-            padding: 16px 20px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            background-color: rgba(15, 23, 42, 0.9);
-        }
-
-        /* 表单样式 */
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--text-secondary);
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .form-group .form-control {
-            width: 100%;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 16px;
-        }
-
-        .form-row .form-group {
-            flex: 1;
-        }
-
-        /* 状态提示样式 */
-        .status-message {
-            padding: 30px 15px;
-            text-align: center;
-            color: var(--text-secondary);
-        }
-
-        .loading {
-            color: var(--text-secondary);
-        }
-
-        .loading i {
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-            color: var(--primary);
-        }
-
-        .error {
-            color: var(--danger);
-        }
-
-        .empty {
-            color: var(--text-secondary);
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* 批量操作样式 */
-        .batch-operations {
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            padding: 12px 16px;
+        .modal-content {
             background-color: var(--card-bg);
             border-radius: 8px;
-            border: 1px solid var(--border-color);
-            backdrop-filter: blur(8px);
-        }
-
-        .checkbox-column {
-            width: 50px;
-        }
-
-        /* 倒计时样式 */
-        .countdown {
-            font-weight: 500;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            transform: translateY(20px);
             transition: var(--transition);
         }
 
-        .countdown-expired {
-            color: var(--danger);
+        .modal.active .modal-content {
+            transform: translateY(0);
         }
 
-        .countdown-warning {
-            color: var(--warning);
-            animation: pulse 2s infinite;
+        .form-group {
+            margin-bottom: 16px;
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
 
-        .countdown-normal {
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--darker-bg);
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-bar input, .search-bar select {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--success);
+            border-radius: 4px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification h3 {
+            margin: 0 0 5px 0;
             color: var(--success);
         }
 
-        /* 时间显示样式 */
-        .timezone-info {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-left: 5px;
-        }
-
-        /* 续期弹窗样式 */
-        .renew-modal .modal-body {
-            padding: 20px;
-        }
-
-        .renew-info {
-            margin-bottom: 18px;
-            padding: 14px;
-            background-color: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-        }
-
-        .renew-info p {
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .renew-info p strong {
+        .notification p {
+            margin: 0;
             color: var(--text-secondary);
         }
 
-        /* 调试信息样式 */
-        .debug-info {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            font-style: italic;
-            padding-top: 8px;
-            border-top: 1px dashed var(--border-color);
-        }
-
-        /* 优化新增的样式 */
-        .required-mark {
-            color: var(--danger);
-        }
-
-        .form-section {
-            margin-bottom: 24px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .form-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .form-section-title {
-            font-size: 16px;
-            margin-bottom: 14px;
-            color: var(--text-primary);
+        .step-navigation {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-        }
-
-        .form-section-title i {
-            color: var(--primary);
-        }
-
-        .form-advanced-toggle {
-            margin: 12px 0;
-        }
-
-        .time-shortcuts {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .time-shortcuts .btn {
-            padding: 4px 10px;
-            font-size: 12px;
-        }
-
-        .expire-preview {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            font-size: 13px;
-            color: var(--primary);
-            border: 1px solid rgba(0, 163, 255, 0.1);
-        }
-
-        /* 步骤样式 */
-        .steps {
-            display: flex;
-            margin-bottom: 24px;
-            gap: 4px;
-            overflow-x: auto;
-            padding-bottom: 8px;
-        }
-
-        .steps::-webkit-scrollbar {
-            height: 4px;
-        }
-
-        .steps::-webkit-scrollbar-thumb {
-            background-color: var(--border-color);
-            border-radius: 4px;
-        }
-
-        .step {
-            padding: 10px 20px;
-            background-color: var(--glass-bg);
-            border-radius: 6px;
-            font-size: 14px;
-            color: var(--text-secondary);
-            transition: var(--transition);
-            white-space: nowrap;
-            border: 1px solid var(--border-color);
-            flex-shrink: 0;
-            position: relative;
-        }
-
-        .step::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 0;
-            background: linear-gradient(180deg, var(--primary), var(--secondary));
-            border-radius: 3px 0 0 3px;
-            transition: height 0.3s ease;
-        }
-
-        .step.active {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 2px 10px var(--primary-glow);
-        }
-
-        .step.active::after {
-            height: 100%;
+            justify-content: space-between;
+            margin-top: 20px;
         }
 
         .step-content {
             display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .step-content.active {
             display: block;
         }
 
-        .confirm-summary {
-            background-color: rgba(255, 255, 255, 0.03);
-            padding: 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .confirm-summary p {
-            margin: 10px 0;
-            font-size: 14px;
-        }
-
-        .confirm-summary p strong {
-            color: var(--text-secondary);
-            display: inline-block;
-            width: 100px;
-        }
-
-        .success-modal {
-            text-align: center;
-            padding: 30px 20px;
-        }
-
-        .success-icon {
-            font-size: 60px;
-            color: var(--success);
-            margin-bottom: 20px;
-            text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-            animation: successPulse 1s ease-in-out;
-        }
-
-        @keyframes successPulse {
-            0% { transform: scale(0.8); opacity: 0; }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* 新增：时间设置区域样式 */
-        .time-group {
+        .step-indicator {
             display: flex;
-            gap: 16px;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
+            gap: 10px;
         }
 
-        .time-group .form-group {
+        .step-indicator-item {
             flex: 1;
-            margin-bottom: 0;
-        }
-
-        .time-display {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-top: 6px;
-        }
-
-        .time-validation {
-            margin-top: 6px;
-            font-size: 12px;
-            padding: 6px;
+            text-align: center;
+            padding: 8px;
+            background-color: var(--darker-bg);
             border-radius: 4px;
+            position: relative;
+        }
+
+        .step-indicator-item::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -10px;
+            width: 10px;
+            height: 2px;
+            background-color: var(--border-color);
+        }
+
+        .step-indicator-item:last-child::after {
             display: none;
         }
 
-        .time-validation.valid {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            display: block;
-            border: 1px solid rgba(16, 185, 129, 0.2);
+        .step-indicator-item.active {
+            background-color: var(--primary-glow);
+            border-color: var(--primary);
         }
 
-        .time-validation.invalid {
-            background-color: rgba(239, 68, 68, 0.1);
+        .batch-actions {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: var(--glass-bg);
+            border-radius: 4px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+        }
+
+        .status-message.loading i {
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message.error {
             color: var(--danger);
-            display: block;
-            border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
-        .reminder-option {
+        .advanced-toggle {
+            color: var(--primary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px 0;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 12px;
-            font-size: 14px;
+            gap: 5px;
+            margin-bottom: 15px;
         }
 
-        /* 复选框样式 */
-        input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
+        .advanced-fields {
+            display: none;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: var(--darker-bg);
             border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background-color: var(--glass-bg);
-            color: var(--primary);
-            transition: var(--transition);
-            cursor: pointer;
         }
 
-        input[type="checkbox"]:checked {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px var(--primary-glow);
+        .advanced-fields.active {
+            display: block;
         }
 
-        input[type="checkbox"]:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px var(--primary-glow);
-        }
-
-        /* 科技感装饰元素 */
-        .decor-element {
-            position: fixed;
-            pointer-events: none;
-            z-index: -1;
-            opacity: 0.1;
-        }
-
-        /* 新增装饰元素 */
-        .tech-grid {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 163, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 163, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* 响应式调整 */
-        @media (max-width: 768px) {
-            .form-row, .time-group {
-                flex-direction: column;
-                gap: 16px;
-            }
-
-            .operation-bar, .search-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .search-group .form-control {
-                width: 100%;
-            }
-
-            .ad-table th:nth-child(4),
-            .ad-table td:nth-child(4),
-            .ad-table th:nth-child(5),
-            .ad-table td:nth-child(5) {
-                display: none;
-            }
+        .time-preview {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
-    <!-- 科技感装饰元素 -->
-    <div class="tech-grid"></div>
-    <div class="decor-element" style="width: 500px; height: 500px; top: -250px; left: -250px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); border-radius: 50%;"></div>
-    <div class="decor-element" style="width: 400px; height: 400px; bottom: -200px; right: -200px; background: radial-gradient(circle, var(--secondary) 0%, transparent 70%); border-radius: 50%;"></div>
+    <!-- 背景装饰元素 -->
+    <div class="decor-element" style="width: 500px; height: 500px; position: fixed; top: -250px; left: -250px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); border-radius: 50%; opacity: 0.1; pointer-events: none;"></div>
+    <div class="decor-element" style="width: 400px; height: 400px; position: fixed; bottom: -200px; right: -200px; background: radial-gradient(circle, var(--secondary) 0%, transparent 70%); border-radius: 50%; opacity: 0.1; pointer-events: none;"></div>
 
     <div class="container">
         <h1><i class="fas fa-gamepad"></i> 游戏广告管理系统</h1>
         
-        <!-- 操作栏 -->
-        <div class="operation-bar">
-            <div class="search-group">
-                <input type="text" class="form-control" id="searchInput" placeholder="搜索服务器名...">
-                <select class="form-control" id="areaFilter">
-                    <option value="">所有区域</option>
-                    <option value="top_yellow">置顶黄</option>
-                    <option value="white_area">白色</option>
-                    <option value="orange_area">橙色</option>
-                    <option value="green_area">绿色</option>
-                </select>
-                <select class="form-control" id="statusFilter">
-                    <option value="">全部状态</option>
-                    <option value="expired">仅过期</option>
-                </select>
-                <button class="btn btn-secondary" id="searchBtn">
-                    <i class="fas fa-search"></i> 搜索
-                </button>
-            </div>
-            <button class="btn btn-primary" id="addAdBtn">
-                <i class="fas fa-plus"></i> 发布广告
-            </button>
+        <!-- 服务器时间显示 -->
+        <div style="margin-bottom: 15px; color: var(--text-secondary); font-size: 0.9rem;">
+            <i class="fas fa-clock"></i> 服务器时间: <span id="serverTimeDisplay">加载中...</span>
         </div>
         
-        <!-- 批量操作 -->
-        <div class="batch-operations">
-            <input type="checkbox" id="selectAll">
-            <label for="selectAll">全选</label>
-            <button class="btn btn-danger" id="batchDeleteBtn" disabled>
-                <i class="fas fa-trash"></i> 批量删除
-            </button>
-            <button class="btn btn-warning" id="batchRenewBtn" disabled>
-                <i class="fas fa-redo"></i> 批量续期
-            </button>
-            <span id="selectedCount">已选择 0 项</span>
-            <span class="timezone-info">当前时间: <span id="currentUtc8Time"></span> (UTC+8)</span>
+        <!-- 搜索和筛选区域 -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索服务器名或特性...">
+            <select id="areaFilter">
+                <option value="">所有地区</option>
+                <option value="CN">中国大陆</option>
+                <option value="US">美国</option>
+                <option value="EU">欧洲</option>
+                <option value="JP">日本</option>
+                <option value="KR">韩国</option>
+                <option value="OTHER">其他</option>
+            </select>
+            <select id="statusFilter">
+                <option value="">所有状态</option>
+                <option value="active">正在进行</option>
+                <option value="upcoming">即将开始</option>
+                <option value="expired">已过期</option>
+            </select>
+            <button id="searchBtn" class="btn btn-primary"><i class="fas fa-search"></i> 搜索</button>
+            <button id="resetFilterBtn" class="btn"><i class="fas fa-sync-alt"></i> 重置</button>
         </div>
-
-        <!-- 广告状态统计信息 -->
-        <div class="batch-operations">
-            <span id="statusSummary" style="color: var(--text-secondary);">
-                <i class="fas fa-info-circle"></i> 当前正常广告 0 条，已过期广告 0 条
-            </span>
+        
+        <!-- 操作按钮区域 -->
+        <div class="action-buttons">
+            <button id="addAdBtn" class="btn btn-primary"><i class="fas fa-plus"></i> 新增广告</button>
+            <button id="batchDeleteBtn" class="btn btn-danger" disabled><i class="fas fa-trash-alt"></i> 批量删除</button>
+            <button id="batchRenewBtn" class="btn btn-primary" disabled><i class="fas fa-redo"></i> 批量续期</button>
+            <button id="refreshBtn" class="btn"><i class="fas fa-sync-alt"></i> 刷新数据</button>
         </div>
-
-        <!-- 广告表格 -->
-        <div class="table-container">
-            <table class="ad-table">
-                <thead>
-                    <tr>
-                        <th class="checkbox-column"><i class="fas fa-check"></i></th>
-                        <th>ID</th>
-                        <th>服务器名</th>
-                        <th>开机时间 <span class="timezone-info">(UTC+8)</span></th>
-                        <th>过期时间 <span class="timezone-info">(UTC+8)</span></th>
-                        <th>过期倒计时</th>
-                        <th>状态</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="adTableBody">
-                    <tr>
-                        <td colspan="8" class="status-message loading">
-                            <i class="fas fa-circle-notch"></i> 加载广告数据中...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        
+        <!-- 批量操作提示 -->
+        <div class="batch-actions" id="batchActions" style="display: none;">
+            <i class="fas fa-info-circle"></i>
+            <span>已选择 <span id="selectedCount">0</span> 条广告</span>
+        </div>
+        
+        <!-- 广告数据表格 -->
+        <table class="ad-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">
+                        <input type="checkbox" id="selectAll">
+                    </th>
+                    <th>ID</th>
+                    <th>服务器名</th>
+                    <th>地区</th>
+                    <th>开始时间</th>
+                    <th>结束时间</th>
+                    <th>状态</th>
+                    <th>剩余时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="adTableBody">
+                <tr><td colspan="9" class="status-message loading"><i class="fas fa-circle-notch fa-spin"></i> 加载广告数据中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- 广告编辑/新增模态框 -->
+    <div id="adModal" class="modal">
+        <div class="modal-content">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                <h2 id="modalTitle"><i class="fas fa-plus"></i> 新增广告</h2>
+            </div>
+            <div style="padding: 20px;">
+                <!-- 步骤指示器 -->
+                <div class="step-indicator">
+                    <div class="step-indicator-item active" data-step="1">基本信息</div>
+                    <div class="step-indicator-item" data-step="2">时间设置</div>
+                    <div class="step-indicator-item" data-step="3">高级选项</div>
+                    <div class="step-indicator-item" data-step="4">确认</div>
+                </div>
+                
+                <!-- 步骤内容 -->
+                <div class="step-content active" data-step="1">
+                    <div class="form-group">
+                        <label for="serverName">服务器名称 <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="serverName" required placeholder="输入服务器名称">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="area">地区 <span style="color: var(--danger);">*</span></label>
+                        <select id="area" required>
+                            <option value="">选择地区</option>
+                            <option value="CN">中国大陆</option>
+                            <option value="US">美国</option>
+                            <option value="EU">欧洲</option>
+                            <option value="JP">日本</option>
+                            <option value="KR">韩国</option>
+                            <option value="OTHER">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="batchCount">批量创建数量</label>
+                        <input type="number" id="batchCount" min="1" value="1">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                            如需创建多个连续广告，可设置数量，系统将自动生成序号
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-content" data-step="2">
+                    <div class="form-group">
+                        <label for="openTime">开始时间 <span style="color: var(--danger);">*</span></label>
+                        <input type="datetime-local" id="openTime" required>
+                        <div class="time-preview">UTC时间: <span id="openTimeUTC"></span></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expireTime">结束时间 <span style="color: var(--danger);">*</span></label>
+                        <input type="datetime-local" id="expireTime" required>
+                        <div class="time-preview">UTC时间: <span id="expireTimeUTC"></span></div>
+                    </div>
+                    
+                    <div class="form-group" id="timeOffsetGroup" style="display: none;">
+                        <label for="timeOffset">批量时间间隔（分钟）</label>
+                        <input type="number" id="timeOffset" min="1" value="60">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                            批量创建时，每个广告的开始和结束时间将依次递增此值
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-content" data-step="3">
+                    <div class="form-group">
+                        <label for="feature">广告特性 <span style="color: var(--danger);">*</span></label>
+                        <textarea id="feature" rows="3" required placeholder="描述广告的主要特性和内容"></textarea>
+                        <div class="time-preview"><span id="featureLength">0</span> 字符 (最多200字符)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expRate">经验倍率</label>
+                        <input type="text" id="expRate" placeholder="例如：2x, 1.5x">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="version">适用版本</label>
+                        <input type="text" id="version" placeholder="例如：1.0.0, 2.3.x">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="homepage">活动页面</label>
+                        <input type="url" id="homepage" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enableReminder"> 启用过期提醒
+                        </label>
+                    </div>
+                    
+                    <div class="form-group" id="reminderTimeGroup" style="display: none;">
+                        <label for="reminderTime">提前提醒时间（小时）</label>
+                        <input type="number" id="reminderTime" min="1" value="24">
+                    </div>
+                </div>
+                
+                <div class="step-content" data-step="4">
+                    <div style="background-color: var(--darker-bg); padding: 15px; border-radius: 4px; margin-bottom: 15px;">
+                        <h3 style="margin-top: 0; color: var(--primary);">广告信息确认</h3>
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 30%; padding: 5px 0; color: var(--text-secondary);">服务器名称:</td>
+                                <td id="confirmServerName" style="padding: 5px 0;"></td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; padding: 5px 0; color: var(--text-secondary);">地区:</td>
+                                <td id="confirmArea" style="padding: 5px 0;"></td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; padding: 5px 0; color: var(--text-secondary);">开始时间:</td>
+                                <td id="confirmOpenTime" style="padding: 5px 0;"></td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; padding: 5px 0; color: var(--text-secondary);">结束时间:</td>
+                                <td id="confirmExpireTime" style="padding: 5px 0;"></td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; padding: 5px 0; color: var(--text-secondary);">广告特性:</td>
+                                <td id="confirmFeature" style="padding: 5px 0; word-break: break-all;"></td>
+                            </tr>
+                            <tr id="confirmBatchRow" style="display: none;">
+                                <td style="width: 30%; padding: 5px 0; color: var(--text-secondary);">创建数量:</td>
+                                <td id="confirmBatchCount" style="padding: 5px 0;"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="confirmCheck"> 我已确认以上信息正确无误
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 步骤导航按钮 -->
+                <div class="step-navigation">
+                    <button id="prevStepBtn" class="btn" style="visibility: hidden;"><i class="fas fa-arrow-left"></i> 上一步</button>
+                    <div style="flex: 1;"></div>
+                    <button id="nextStepBtn" class="btn btn-primary"><i class="fas fa-arrow-right"></i> 下一步</button>
+                    <button id="saveAdBtn" class="btn btn-primary" style="display: none;"><i class="fas fa-save"></i> 保存广告</button>
+                </div>
+            </div>
+            <div style="padding: 10px 20px; border-top: 1px solid var(--border-color); text-align: right;">
+                <button id="closeModalBtn" class="btn">关闭</button>
+            </div>
+            <input type="hidden" id="adId">
         </div>
     </div>
     
-    <!-- 广告编辑弹窗 -->
-    <div class="modal-backdrop" id="adModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">发布新广告</h2>
-                <button class="close-modal" id="closeModal">&times;</button>
+    <!-- 续期模态框 -->
+    <div id="renewModal" class="modal">
+        <div class="modal-content">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                <h2><i class="fas fa-redo"></i> 广告续期</h2>
             </div>
-            <div class="modal-body">
-                <!-- 步骤导航 -->
-                <div class="steps">
-                    <div class="step active" data-step="1">1. 基本信息</div>
-                    <div class="step" data-step="2">2. 时间设置</div>
-                    <div class="step" data-step="3">3. 确认发布</div>
-                </div>
-                
-                <form id="adForm">
-                    <input type="hidden" id="adId">
-                    
-                    <!-- 步骤1: 基本信息 -->
-                    <div class="step-content active" data-step="1">
-                        <div class="form-section">
-                            <h3 class="form-section-title"><i class="fas fa-info-circle"></i> 广告基本信息</h3>
-                            <div class="form-group">
-                                <label for="serverName">服务器名 <span class="required-mark">*</span></label>
-                                <input type="text" class="form-control" id="serverName" required placeholder="例如：传奇S1服">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="area">展示区域 <span class="required-mark">*</span></label>
-                                <select class="form-control" id="area">
-                                    <option value="top_yellow">置顶黄（推荐）</option>
-                                    <option value="white_area">白色区域</option>
-                                    <option value="orange_area">橙色区域</option>
-                                    <option value="green_area">绿色区域</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-advanced-toggle">
-                            <button type="button" id="showAdvancedBtn" class="btn btn-sm btn-secondary">
-                                <i class="fas fa-cog"></i> 补充更多信息（可选）
-                            </button>
-                        </div>
-                        
-                        <div id="advancedFields" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
-                            <div class="form-group">
-                                <label for="feature">游戏版本特色介绍</label>
-                                <textarea class="form-control" id="feature" rows="3" placeholder="简单描述服务器特色，如：百倍爆率、无VIP..."></textarea>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="expRate">经验倍率</label>
-                                    <input type="text" class="form-control" id="expRate" placeholder="例如：10x">
-                                </div>
-                                <div class="form-group">
-                                    <label for="version">版本</label>
-                                    <input type="text" class="form-control" id="version" placeholder="例如：v1.0.0">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="homepage">游戏主页</label>
-                                <input type="url" class="form-control" id="homepage" placeholder="https://">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 步骤2: 时间设置 -->
-                    <div class="step-content" data-step="2">
-                        <div class="form-section">
-                            <h3 class="form-section-title"><i class="fas fa-clock"></i> 时间设置</h3>
-                            
-                            <!-- 优化：将开始时间和结束时间放在一起 -->
-                            <div class="time-group">
-                                <div class="form-group">
-                                    <label for="openTime">开始时间 <span class="required-mark">*</span> <span class="timezone-info">(UTC+8)</span></label>
-                                    <input type="datetime-local" class="form-control" id="openTime" required>
-                                    <div class="time-display">
-                                        当前服务器时间: <span id="timeDisplay" style="color: var(--primary);"></span>
-                                    </div>
-                                    <div class="time-validation" id="startTimeValidation"></div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="expireTime">结束时间 <span class="required-mark">*</span> <span class="timezone-info">(UTC+8)</span></label>
-                                    <input type="datetime-local" class="form-control" id="expireTime" required>
-                                    <div class="time-validation" id="endTimeValidation"></div>
-                                </div>
-                            </div>
-                            
-                            <!-- 优化：更丰富的时间快捷选项 -->
-                            <div class="form-group">
-                                <label>快速选择时长</label>
-                                <div class="time-shortcuts">
-                                    <button type="button" class="btn btn-sm btn-secondary" data-duration="24">24小时</button>
-                                    <button type="button" class="btn btn-sm btn-secondary" data-duration="48">48小时</button>
-                                    <button type="button" class="btn btn-sm btn-secondary" data-duration="72">72小时</button>
-                                    <button type="button" class="btn btn-sm btn-secondary" data-duration="168">1周</button>
-                                    <button type="button" class="btn btn-sm btn-secondary" data-time="endOfDay">今日结束</button>
-                                    <button type="button" class="btn btn-sm btn-secondary" data-time="tomorrow9">明日9点</button>
-                                    <button type="button" class="btn btn-sm btn-secondary" data-time="custom">自定义...</button>
-                                </div>
-                            </div>
-                            
-                            <!-- 优化：添加到期提醒选项 -->
-                            <div class="reminder-option">
-                                <input type="checkbox" id="enableReminder" checked>
-                                <label for="enableReminder">到期前提醒我</label>
-                                <select class="form-control" id="reminderTime" style="width: auto;">
-                                    <option value="1">1小时</option>
-                                    <option value="24" selected>1天</option>
-                                    <option value="48">2天</option>
-                                    <option value="168">1周</option>
-                                </select>
-                            </div>
-                            
-                            <div class="expire-preview" id="expireTimePreview">
-                                广告将从选定时间开始展示，持续至选定的结束时间
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 步骤3: 确认发布 -->
-                    <div class="step-content" data-step="3">
-                        <div class="confirm-summary">
-                            <p><strong>服务器名：</strong><span id="confirmServerName">-</span></p>
-                            <p><strong>展示区域：</strong><span id="confirmArea">-</span></p>
-                            <p><strong>开始时间：</strong><span id="confirmOpenTime">-</span></p>
-                            <p><strong>结束时间：</strong><span id="confirmExpireTime">-</span></p>
-                            <p><strong>展示时长：</strong><span id="confirmDuration">-</span></p>
-                            <p><strong>到期提醒：</strong><span id="confirmReminder">-</span></p>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="confirmCheck" required> 我已确认以上信息正确无误
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary prev-step" style="display: none;">← 上一步</button>
-                <button class="btn btn-primary next-step">下一步 →</button>
-                <button class="btn btn-primary" id="finalSubmitBtn" style="display: none;">确认发布</button>
-                <button class="btn btn-secondary" id="cancelBtn">取消</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 续期弹窗 -->
-    <div class="modal-backdrop renew-modal" id="renewModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 class="modal-title" id="renewModalTitle">广告续期</h2>
-                <button class="close-modal" id="closeRenewModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="renew-info">
-                    <p><strong>广告ID:</strong> <span id="renewAdId"></span></p>
-                    <p><strong>服务器名:</strong> <span id="renewServerName"></span></p>
-                    <p><strong>当前过期时间:</strong> <span id="currentExpireTime"></span></p>
-                    <p><strong>新过期时间:</strong> <span id="newExpireTime"></span></p>
-                    <div class="debug-info" id="timeDebugInfo"></div>
-                </div>
+            <div style="padding: 20px;">
                 <div class="form-group">
-                    <label for="renewDuration">续期时长 <span class="required-mark">*</span></label>
-                    <select class="form-control" id="renewDurationSelect">
-                        <option value="24">24小时</option>
+                    <label for="renewDurationSelect">续期时长</label>
+                    <select id="renewDurationSelect" onchange="document.getElementById('customRenewDuration').style.display = this.value === 'custom' ? 'block' : 'none'">
+                        <option value="12">12小时</option>
+                        <option value="24" selected>24小时</option>
                         <option value="48">48小时</option>
                         <option value="72">72小时</option>
-                        <option value="168">1周</option>
-                        <option value="custom">自定义...</option>
+                        <option value="168">7天</option>
+                        <option value="custom">自定义</option>
                     </select>
-                    <div id="customRenewDurationContainer" style="display: none; margin-top: 8px;">
-                        <input type="number" class="form-control" id="customRenewDuration" min="1" placeholder="输入小时数">
-                    </div>
+                </div>
+                
+                <div class="form-group" id="customRenewDuration" style="display: none;">
+                    <label for="customDurationInput">自定义时长（小时）</label>
+                    <input type="number" id="customDurationInput" min="1" value="24">
+                </div>
+                
+                <div class="form-group">
+                    <label>原过期时间</label>
+                    <div id="originalExpireTime" style="padding: 8px; background-color: var(--darker-bg); border-radius: 4px;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>新过期时间</label>
+                    <div id="newExpireTime" style="padding: 8px; background-color: var(--darker-bg); border-radius: 4px; color: var(--success);"></div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelRenewBtn">取消</button>
-                <button class="btn btn-warning" id="confirmRenewBtn">确认续期</button>
+            <div style="padding: 10px 20px; border-top: 1px solid var(--border-color); text-align: right;">
+                <button id="closeRenewModalBtn" class="btn">取消</button>
+                <button id="confirmRenewBtn" class="btn btn-primary">确认续期</button>
             </div>
         </div>
     </div>
-
-    <!-- 成功提示弹窗 -->
-    <div class="modal-backdrop" id="successModal">
-        <div class="modal">
-            <div class="modal-body success-modal">
-                <div class="success-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <h3 id="successTitle">操作成功</h3>
-                <p id="successMessage">广告已成功发布</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="closeSuccessModal">返回列表</button>
-                <button class="btn btn-primary" id="anotherAdBtn">发布另一个广告</button>
-            </div>
-        </div>
+    
+    <!-- 成功提示通知 -->
+    <div id="successNotification" class="notification">
+        <h3 id="notificationTitle"></h3>
+        <p id="notificationMessage"></p>
     </div>
-
+    
     <script>
-        // 后端API基础地址
-        const API_BASE_URL = 'http://localhost:3000/api/ads';
-        let allAds = []; // 存储所有广告数据
-        let selectedIds = new Set(); // 存储选中的广告ID
-        let currentRenewAdId = null; // 当前续期的广告ID
-        let countdownInterval; // 倒计时定时器
-        let currentTimeInterval; // 当前时间更新定时器
-        let serverTimeOffset = 0; // 服务器时间与客户端时间的偏移量（毫秒）
-        let currentStep = 1; // 当前步骤
-        let serverTimeInterval; // 服务器时间显示定时器
+        // 全局变量 - 存储从数据库获取的真实数据
+        let allAds = [];
+        let selectedIds = new Set();
+        let currentRenewAdId = null;
+        let countdownInterval;
+        let serverTimeOffset = 0; // 服务器时间与本地时间的偏移量（毫秒）
+        let currentStep = 1;
+        
+        // API基础地址 - 请替换为您实际的后端API地址
+        // 这些API应直接连接到您的数据库进行CRUD操作
+        const API_BASE_URL = 'https://api.yourgame.com/admanager';
 
-        // DOM加载完成后初始化
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 先获取服务器时间偏移量
-            await syncServerTime();
-            // 加载广告数据
-            loadAdData();
-            // 绑定事件监听
+        document.addEventListener('DOMContentLoaded', () => {
             bindEventListeners();
-            // 启动当前时间更新定时器
-            startCurrentTimeUpdates();
-            // 加载用户偏好设置
+            startServerTimeSync();
             loadUserPreferences();
+            loadAdData(); // 从数据库加载真实数据
         });
 
-        /**
-         * 同步服务器时间，计算时间偏移量
-         */
-        async function syncServerTime() {
+        // 同步服务器时间 - 确保所有时间计算基于服务器时间
+        async function startServerTimeSync() {
             try {
-                const response = await fetch(`${API_BASE_URL}/current-time`, {
+                // 从服务器获取当前时间
+                const response = await fetch(`${API_BASE_URL}/time`, {
                     method: 'GET',
-                    headers: { 'Cache-Control': 'no-cache' }
-                });
-                const result = await response.json();
-                if (result.code === 200) {
-                    const serverTime = result.data.timestamp; // 服务器UTC+8时间戳
-                    const clientTime = Date.now();
-                    // 计算偏移量（服务器时间 - 客户端时间）
-                    serverTimeOffset = serverTime - clientTime;
-                    console.log(`时间同步完成，偏移量: ${serverTimeOffset}ms`);
-                    console.log(`服务器UTC+8时间: ${new Date(serverTime).toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}`);
-                    console.log(`客户端本地时间: ${new Date(clientTime).toLocaleString()}`);
-                    
-                    // 检查时间偏移是否过大（超过10分钟）
-                    if (Math.abs(serverTimeOffset) > 10 * 60 * 1000) {
-                        console.warn(`服务器时间偏差较大: ${(serverTimeOffset / (60 * 1000)).toFixed(1)}分钟`);
+                    headers: {
+                        'Accept': 'application/json'
                     }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`获取服务器时间失败: ${response.status}`);
                 }
+                
+                const data = await response.json();
+                const serverTime = new Date(data.currentTime).getTime();
+                const localTime = Date.now();
+                
+                // 计算时间偏移量
+                serverTimeOffset = serverTime - localTime;
+                
+                // 更新时间显示
+                updateServerTimeDisplay();
+                
+                // 每秒更新一次时间显示
+                setInterval(updateServerTimeDisplay, 1000);
+                
             } catch (error) {
-                console.error('时间同步失败，将使用客户端时间:', error);
-                serverTimeOffset = 0;
+                console.error('时间同步失败:', error);
+                // 同步失败时使用本地时间，但在控制台提示
+                console.warn('使用本地时间代替服务器时间，可能导致时间计算不准确');
+                updateServerTimeDisplay();
+                setInterval(updateServerTimeDisplay, 1000);
             }
         }
 
-        /**
-         * 获取当前UTC+8时间戳（基于服务器时间）
-         */
-        function getCurrentServerTime() {
-            return Date.now() + serverTimeOffset;
-        }
-
-        /**
-         * 加载用户偏好设置
-         */
-        function loadUserPreferences() {
-            const userPreferences = JSON.parse(localStorage.getItem('adPreferences') || '{}');
-            // 自动选中常用区域
-            if (userPreferences.lastArea) {
-                document.getElementById('area').value = userPreferences.lastArea;
-            }
-            // 自动选中提醒时间
-            if (userPreferences.reminderTime) {
-                document.getElementById('reminderTime').value = userPreferences.reminderTime;
-            }
-            // 自动启用提醒
-            if (typeof userPreferences.enableReminder !== 'undefined') {
-                document.getElementById('enableReminder').checked = userPreferences.enableReminder;
-            }
-        }
-
-        /**
-         * 保存用户偏好设置
-         */
-        function saveUserPreferences() {
-            const userPreferences = {
-                lastArea: document.getElementById('area').value,
-                reminderTime: document.getElementById('reminderTime').value,
-                enableReminder: document.getElementById('enableReminder').checked,
-                lastSaveTime: Date.now()
-            };
-            
-            localStorage.setItem('adPreferences', JSON.stringify(userPreferences));
-        }
-
-        /**
-         * 绑定所有事件监听器
-         */
-        function bindEventListeners() {
-            // 搜索按钮
-            document.getElementById('searchBtn').addEventListener('click', filterAds);
-            
-            // 发布广告按钮
-            document.getElementById('addAdBtn').addEventListener('click', () => {
-                openModal();
-            });
-            
-            // 关闭弹窗按钮
-            document.getElementById('closeModal').addEventListener('click', closeModal);
-            document.getElementById('cancelBtn').addEventListener('click', closeModal);
-            
-            // 步骤导航按钮
-            document.querySelectorAll('.next-step').forEach(btn => {
-                btn.addEventListener('click', goToNextStep);
-            });
-            
-            document.querySelectorAll('.prev-step').forEach(btn => {
-                btn.addEventListener('click', goToPrevStep);
-            });
-            
-            // 最终提交按钮
-            document.getElementById('finalSubmitBtn').addEventListener('click', saveAd);
-            
-            // 全选按钮
-            document.getElementById('selectAll').addEventListener('change', handleSelectAll);
-            
-            // 批量删除按钮
-            document.getElementById('batchDeleteBtn').addEventListener('click', batchDeleteAds);
-            
-            // 批量续期按钮
-            document.getElementById('batchRenewBtn').addEventListener('click', batchRenewAds);
-            
-            // 搜索框回车事件
-            document.getElementById('searchInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') filterAds();
-            });
-            
-            // 续期弹窗相关事件
-            document.getElementById('closeRenewModal').addEventListener('click', closeRenewModal);
-            document.getElementById('cancelRenewBtn').addEventListener('click', closeRenewModal);
-            document.getElementById('confirmRenewBtn').addEventListener('click', confirmRenew);
-            document.getElementById('renewDurationSelect').addEventListener('change', function() {
-                document.getElementById('customRenewDurationContainer').style.display = 
-                    this.value === 'custom' ? 'block' : 'none';
-                updateNewExpireTimePreview();
-            });
-            
-            // 展示更多信息按钮
-            document.getElementById('showAdvancedBtn').addEventListener('click', function() {
-                const advancedFields = document.getElementById('advancedFields');
-                const isVisible = advancedFields.style.display !== 'none';
-                
-                advancedFields.style.display = isVisible ? 'none' : 'block';
-                this.innerHTML = isVisible ? 
-                    '<i class="fas fa-cog"></i> 补充更多信息（可选）' : 
-                    '<i class="fas fa-chevron-up"></i> 收起更多信息';
-            });
-            
-            // 时间快捷按钮事件
-            document.querySelectorAll('.time-shortcuts button').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const now = getCurrentServerTime();
-                    const openTimeInput = document.getElementById('openTime');
-                    const expireTimeInput = document.getElementById('expireTime');
-                    
-                    // 获取当前开始时间或使用现在时间
-                    let openTime = openTimeInput.value ? 
-                        convertLocalToUTC(openTimeInput.value) : now;
-                    
-                    let expireTime;
-                    
-                    // 处理时长快捷按钮
-                    if (btn.dataset.duration) {
-                        const hours = parseInt(btn.dataset.duration);
-                        expireTime = openTime + hours * 60 * 60 * 1000;
-                    } 
-                    // 处理特定时间快捷按钮
-                    else if (btn.dataset.time) {
-                        const today = new Date(now);
-                        switch(btn.dataset.time) {
-                            case 'endOfDay':
-                                // 今天23:59
-                                expireTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59).getTime();
-                                // 如果当前时间已过今天结束时间，则设为明天结束时间
-                                if (expireTime < now) {
-                                    expireTime = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 23, 59).getTime();
-                                }
-                                // 确保开始时间早于结束时间
-                                openTime = Math.min(openTime, expireTime - 60000); // 至少早1分钟
-                                break;
-                            case 'tomorrow9':
-                                // 明天9:00
-                                const tomorrow9 = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 9, 0).getTime();
-                                openTime = tomorrow9;
-                                expireTime = tomorrow9 + 24 * 60 * 60 * 1000; // 默认持续24小时
-                                break;
-                            case 'custom':
-                                // 打开自定义时长输入
-                                const hours = prompt("请输入展示时长（小时）:", "24");
-                                if (hours && !isNaN(hours) && parseInt(hours) > 0) {
-                                    expireTime = openTime + parseInt(hours) * 60 * 60 * 1000;
-                                } else {
-                                    return; // 无效输入则不改变
-                                }
-                                break;
-                        }
-                    }
-                    
-                    // 更新输入框
-                    openTimeInput.value = formatDateTimeForInput(openTime);
-                    expireTimeInput.value = formatDateTimeForInput(expireTime);
-                    
-                    // 验证并更新预览
-                    validateTimeRange();
-                    updateExpireTimePreview();
-                });
-            });
-            
-            // 时间变化时验证并更新预览
-            document.getElementById('openTime').addEventListener('change', () => {
-                validateTimeRange();
-                updateExpireTimePreview();
-            });
-            
-            document.getElementById('expireTime').addEventListener('change', () => {
-                validateTimeRange();
-                updateExpireTimePreview();
-            });
-            
-            // 成功弹窗按钮事件
-            document.getElementById('closeSuccessModal').addEventListener('click', () => {
-                document.getElementById('successModal').classList.remove('show');
-            });
-            
-            document.getElementById('anotherAdBtn').addEventListener('click', () => {
-                document.getElementById('successModal').classList.remove('show');
-                openModal(); // 打开新的广告发布窗口
-            });
-            
-            // 页面卸载前清除定时器
-            window.addEventListener('beforeunload', () => {
-                if (countdownInterval) clearInterval(countdownInterval);
-                if (currentTimeInterval) clearInterval(currentTimeInterval);
-                if (serverTimeInterval) clearInterval(serverTimeInterval);
-            });
-        }
-
-        /**
-         * 验证时间范围是否有效
-         */
-        function validateTimeRange() {
-            const openTimeStr = document.getElementById('openTime').value;
-            const expireTimeStr = document.getElementById('expireTime').value;
-            const now = getCurrentServerTime();
-            
-            const startTimeEl = document.getElementById('startTimeValidation');
-            const endTimeEl = document.getElementById('endTimeValidation');
-            
-            // 清除之前的验证状态
-            startTimeEl.className = 'time-validation';
-            endTimeEl.className = 'time-validation';
-            
-            if (!openTimeStr || !expireTimeStr) return;
-            
-            const openTime = convertLocalToUTC(openTimeStr);
-            const expireTime = convertLocalToUTC(expireTimeStr);
-            
-            // 验证开始时间
-            if (openTime < now - 60000) { // 允许1分钟误差
-                startTimeEl.className = 'time-validation invalid';
-                startTimeEl.textContent = '⚠️ 开始时间不能早于当前时间';
-            } else {
-                startTimeEl.className = 'time-validation valid';
-                startTimeEl.textContent = '✓ 开始时间有效';
-            }
-            
-            // 验证结束时间
-            if (expireTime <= openTime) {
-                endTimeEl.className = 'time-validation invalid';
-                endTimeEl.textContent = '⚠️ 结束时间必须晚于开始时间';
-            } else if (expireTime - openTime < 30 * 60 * 1000) { // 至少30分钟
-                endTimeEl.className = 'time-validation invalid';
-                endTimeEl.textContent = '⚠️ 展示时长至少30分钟';
-            } else {
-                endTimeEl.className = 'time-validation valid';
-                endTimeEl.textContent = '✓ 结束时间有效';
-            }
-            
-            return {
-                isValid: startTimeEl.classList.contains('valid') && endTimeEl.classList.contains('valid'),
-                openTime,
-                expireTime
-            };
-        }
-
-        /**
-         * 前往下一步
-         */
-        function goToNextStep() {
-            // 验证当前步骤
-            if (currentStep === 1) {
-                const serverName = document.getElementById('serverName').value.trim();
-                if (!serverName) {
-                    alert('请输入服务器名');
-                    document.getElementById('serverName').focus();
-                    return;
-                }
-            } else if (currentStep === 2) {
-                // 验证时间设置
-                const validation = validateTimeRange();
-                if (!validation.isValid) {
-                    alert('时间设置无效，请检查并修正');
-                    // 滚动到时间设置区域
-                    document.getElementById('openTime').scrollIntoView({ behavior: 'smooth' });
-                    return;
-                }
-                
-                // 更新确认页信息
-                updateConfirmationPage();
-            }
-            
-            // 更新步骤显示
-            document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
-            document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.remove('active');
-            
-            currentStep++;
-            
-            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
-            document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.add('active');
-            
-            // 更新按钮显示
-            updateStepButtons();
-        }
-
-        /**
-         * 前往上一步
-         */
-        function goToPrevStep() {
-            // 更新步骤显示
-            document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
-            document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.remove('active');
-            
-            currentStep--;
-            
-            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
-            document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.add('active');
-            
-            // 更新按钮显示
-            updateStepButtons();
-        }
-
-        /**
-         * 更新步骤按钮显示
-         */
-        function updateStepButtons() {
-            const prevBtn = document.querySelector('.prev-step');
-            const nextBtn = document.querySelector('.next-step');
-            const submitBtn = document.getElementById('finalSubmitBtn');
-            
-            if (currentStep === 1) {
-                prevBtn.style.display = 'none';
-                nextBtn.style.display = 'flex';
-                submitBtn.style.display = 'none';
-            } else if (currentStep === 2) {
-                prevBtn.style.display = 'flex';
-                nextBtn.style.display = 'flex';
-                submitBtn.style.display = 'none';
-            } else {
-                prevBtn.style.display = 'flex';
-                nextBtn.style.display = 'none';
-                submitBtn.style.display = 'flex';
-            }
-        }
-
-        /**
-         * 更新确认页信息
-         */
-        function updateConfirmationPage() {
-            const serverName = document.getElementById('serverName').value.trim();
-            const area = document.getElementById('area').value;
-            const openTimeStr = document.getElementById('openTime').value;
-            const expireTimeStr = document.getElementById('expireTime').value;
-            const enableReminder = document.getElementById('enableReminder').checked;
-            const reminderTime = document.getElementById('reminderTime').value;
-            
-            // 计算时长
-            const openTime = convertLocalToUTC(openTimeStr);
-            const expireTime = convertLocalToUTC(expireTimeStr);
-            const durationMs = expireTime - openTime;
-            const durationHours = Math.round(durationMs / (60 * 60 * 1000));
-            const durationDays = Math.floor(durationMs / (24 * 60 * 60 * 1000));
-            
-            let durationText;
-            if (durationDays >= 1) {
-                durationText = durationDays === 1 ? 
-                    `${durationDays}天 (${durationHours}小时)` : 
-                    `${durationDays}天 (${durationHours}小时)`;
-            } else {
-                durationText = `${durationHours}小时`;
-            }
-            
-            // 区域文本映射
-            const areaMap = {
-                'top_yellow': '置顶黄',
-                'white_area': '白色区域',
-                'orange_area': '橙色区域',
-                'green_area': '绿色区域'
-            };
-            
-            // 提醒文本
-            const reminderText = enableReminder ? 
-                `是（到期前${reminderTime}小时）` : '否';
-            
-            // 更新确认页内容
-            document.getElementById('confirmServerName').textContent = serverName;
-            document.getElementById('confirmArea').textContent = areaMap[area] || area;
-            document.getElementById('confirmOpenTime').textContent = formatUTCDateTime(openTime);
-            document.getElementById('confirmExpireTime').textContent = formatUTCDateTime(expireTime);
-            document.getElementById('confirmDuration').textContent = durationText;
-            document.getElementById('confirmReminder').textContent = reminderText;
-        }
-
-        /**
-         * 从后端加载广告数据
-         */
+        // 从数据库加载广告数据
         async function loadAdData(forceRefresh = false) {
             const tableBody = document.getElementById('adTableBody');
-            tableBody.innerHTML = '<tr><td colspan="8" class="status-message loading"><i class="fas fa-circle-notch"></i> 加载广告数据中...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" class="status-message loading"><i class="fas fa-circle-notch fa-spin"></i> 从数据库加载广告数据中...</td></tr>';
             
-            // 清除之前的定时器
             if (countdownInterval) clearInterval(countdownInterval);
             
             try {
-                // 添加时间戳参数防止缓存
-                const timestamp = forceRefresh ? `&t=${Date.now()}` : '';
-                
-                // 发起请求
-                const response = await fetch(`${API_BASE_URL}?page=1&pageSize=100${timestamp}`, {
+                // 向服务器API请求数据，该API应直接查询数据库
+                const response = await fetch(`${API_BASE_URL}/ads`, {
                     method: 'GET',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache'
+                        // 添加认证信息（根据您的实际认证方式）
+                        'Authorization': 'Bearer ' + getAuthToken()
                     },
-                    credentials: 'include'
+                    cache: forceRefresh ? 'no-cache' : 'default'
                 });
-
-                if (!response.ok) throw new Error(`后端返回错误：${response.status}`);
-
-                const result = await response.json();
-                if (result.code !== 200) throw new Error(`后端返回错误信息：${result.error || '未知错误'}`);
-
-                allAds = result.data.list.map(ad => ({
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `数据库查询失败: ${response.status}`);
+                }
+                
+                // 接收来自数据库的真实数据
+                allAds = await response.json();
+                
+                // 确保时间戳是数字类型
+                allAds = allAds.map(ad => ({
                     ...ad,
-                    // 转换服务器返回的UTC+8时间字符串为时间戳
-                    originalOpenTime: new Date(ad.open_time).getTime(),
-                    originalExpireTime: new Date(ad.expire_time).getTime()
+                    originalOpenTime: Number(ad.originalOpenTime),
+                    originalExpireTime: Number(ad.originalExpireTime)
                 }));
                 
+                // 渲染表格
                 renderAdTable(allAds);
-                startCountdownUpdates(); // 启动倒计时更新
+                
+                // 启动倒计时更新
+                startCountdownUpdates();
                 
             } catch (error) {
-                console.error('加载失败详情：', error);
-                tableBody.innerHTML = `<tr><td colspan="8" class="status-message error"><i class="fas fa-exclamation-triangle"></i> 加载失败：${error.message}</td></tr>`;
+                console.error('数据库加载失败详情：', error);
+                tableBody.innerHTML = `<tr><td colspan="9" class="status-message error"><i class="fas fa-exclamation-triangle"></i> 数据库加载失败：${error.message}</td></tr>`;
             }
         }
 
-        /**
-         * 渲染广告表格
-         */
-        function renderAdTable(ads) {
-            const tableBody = document.getElementById('adTableBody');
-            const now = getCurrentServerTime(); // 使用服务器时间判断
-            
-            // 计算正常和过期广告数量
-            const normalCount = ads.filter(ad => ad.originalExpireTime >= now).length;
-            const expiredCount = ads.length - normalCount;
-            
-            // 更新统计信息
-            document.getElementById('statusSummary').innerHTML = `
-                <i class="fas fa-info-circle"></i> 当前正常广告 ${normalCount} 条，已过期广告 ${expiredCount} 条
-            `;
-     
-            // 空数据处理
-            if (ads.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8" class="status-message empty"><i class="fas fa-info-circle"></i> 没有广告数据，请点击"发布广告"添加</td></tr>';
+        // 保存广告到数据库
+        async function saveAd() {
+            if (!document.getElementById('confirmCheck').checked) {
+                alert('请确认信息无误并勾选确认框');
                 return;
             }
             
-            // 正常渲染
-            tableBody.innerHTML = '';
-            ads.forEach(ad => {
-                const row = document.createElement('tr');
-                row.className = `row-${ad.area || 'white_area'}`;
-                
-                // 判断是否过期（基于服务器时间）
-                const isExpired = ad.originalExpireTime < now;
-                
-                // 格式化时间为UTC+8显示
-                const formattedOpenTime = formatUTCDateTime(ad.originalOpenTime);
-                const formattedExpireTime = formatUTCDateTime(ad.originalExpireTime);
-                
-                row.innerHTML = `
-                    <td class="checkbox-column">
-                        <input type="checkbox" class="ad-checkbox" data-id="${ad.id}">
-                    </td>
-                    <td>${ad.id}</td>
-                    <td>${ad.server_name || '未命名'}</td>
-                    <td>${formattedOpenTime}</td>
-                    <td>${formattedExpireTime}</td>
-                    <td><span class="countdown ${getCountdownClass(ad)}" data-id="${ad.id}">${getCountdownText(ad)}</span></td>
-                    <td><span class="badge ${isExpired ? 'badge-danger' : 'badge-primary'}">${isExpired ? '已过期' : '正常'}</span></td>
-                    <td class="action-buttons">
-                        <button class="btn btn-secondary btn-sm edit-btn" data-id="${ad.id}">编辑</button>
-                        <button class="btn btn-warning btn-sm renew-btn" data-id="${ad.id}">
-                            <i class="fas fa-redo"></i> 续期
-                        </button>
-                        <button class="btn btn-danger btn-sm delete-btn" data-id="${ad.id}">删除</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-            
-            // 绑定事件
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.onclick = () => editAd(btn.dataset.id);
-            });
-            document.querySelectorAll('.renew-btn').forEach(btn => {
-                btn.onclick = () => openRenewModal(btn.dataset.id);
-            });
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.onclick = () => deleteAd(btn.dataset.id);
-            });
-            document.querySelectorAll('.ad-checkbox').forEach(checkbox => {
-                checkbox.onchange = (e) => handleCheckboxChange(e.target);
-            });
-
-            // 重置选中状态
-            selectedIds.clear();
-            updateSelectedCount();
-            document.getElementById('selectAll').checked = false;
-        }
-
-        /**
-         * 打开续期弹窗
-         */
-        function openRenewModal(adId) {
-            currentRenewAdId = adId;
-            const modal = document.getElementById('renewModal');
-            const ad = allAds.find(a => a.id == adId);
-            
-            if (ad) {
-                document.getElementById('renewAdId').textContent = ad.id;
-                document.getElementById('renewServerName').textContent = ad.server_name || '未命名';
-                document.getElementById('currentExpireTime').textContent = formatUTCDateTime(ad.originalExpireTime);
-                document.getElementById('renewDurationSelect').value = 24;
-                document.getElementById('customRenewDurationContainer').style.display = 'none';
-                updateNewExpireTimePreview();
+            if (!validateFeatureLength()) {
+                goToPrevStep();
+                goToPrevStep();
+                document.getElementById('feature').focus();
+                return;
             }
             
-            modal.classList.add('show');
-        }
-
-        /**
-         * 更新新过期时间预览
-         */
-        function updateNewExpireTimePreview() {
-            const renewSelect = document.getElementById('renewDurationSelect');
-            const duration = renewSelect.value === 'custom'
-                ? parseInt(document.getElementById('customRenewDuration').value) || 24
-                : parseInt(renewSelect.value) || 24;
+            const adId = document.getElementById('adId').value;
+            const isEdit = !!adId;
+            const batchCount = parseInt(document.getElementById('batchCount').value);
+            const timeOffset = parseInt(document.getElementById('timeOffset').value);
+            
+            const serverName = document.getElementById('serverName').value.trim();
+            const openTimeStr = document.getElementById('openTime').value.trim();
+            const expireTimeStr = document.getElementById('expireTime').value.trim();
+            const enableReminder = document.getElementById('enableReminder').checked;
+            const reminderTime = document.getElementById('reminderTime').value;
+            
+            // 转换为UTC时间戳
+            const baseOpenTime = convertLocalToUTC(openTimeStr);
+            const baseExpireTime = convertLocalToUTC(expireTimeStr);
+            const offsetMs = timeOffset * 60 * 1000;
+            
+            // 准备要保存到数据库的数据
+            const adsData = [];
+            for (let i = 0; i < batchCount; i++) {
+                const currentOpenTime = baseOpenTime + (i * offsetMs);
+                const currentExpireTime = baseExpireTime + (i * offsetMs);
                 
-            const { newExpireTime, debugInfo } = calculateNewExpireTime(duration);
-            
-            document.getElementById('newExpireTime').textContent = formatUTCDateTime(newExpireTime);
-            document.getElementById('timeDebugInfo').textContent = debugInfo;
-        }
+                let currentServerName = serverName;
+                if (batchCount > 1) {
+                    currentServerName = `${serverName}-${i + 1}`;
+                }
+                
+                adsData.push({
+                    id: isEdit ? adId : null, // 新建广告时ID由数据库生成
+                    server_name: currentServerName,
+                    open_time: new Date(currentOpenTime).toISOString(),
+                    expire_time: new Date(currentExpireTime).toISOString(),
+                    originalOpenTime: currentOpenTime,
+                    originalExpireTime: currentExpireTime,
+                    feature: document.getElementById('feature').value.trim(),
+                    exp_rate: document.getElementById('expRate').value.trim(),
+                    version: document.getElementById('version').value.trim(),
+                    homepage: document.getElementById('homepage').value.trim(),
+                    area: document.getElementById('area').value,
+                    enable_reminder: enableReminder,
+                    reminder_time: enableReminder ? reminderTime : null,
+                    created_at: new Date(getCurrentServerTime()).toISOString(),
+                    updated_at: new Date(getCurrentServerTime()).toISOString()
+                });
+            }
 
-        /**
-         * 计算新的过期时间（基于服务器时间）
-         */
-        function calculateNewExpireTime(duration) {
-            const ad = allAds.find(a => a.id == currentRenewAdId);
-            const now = getCurrentServerTime(); // 使用服务器时间
-            const hoursToMs = parseInt(duration) * 60 * 60 * 1000;
-            
-            // 新过期时间 = max(服务器当前时间, 原过期时间) + 续期时长
-            const baseTime = ad ? Math.max(now, ad.originalExpireTime) : now;
-            const newExpireTime = baseTime + hoursToMs;
-            
-            // 生成调试信息
-            let debugInfo = '';
-            if (ad && !isNaN(ad.originalExpireTime)) {
-                const isExpired = ad.originalExpireTime < now;
-                debugInfo = `服务器时间: ${formatUTCDateTime(now)}, 原过期: ${formatUTCDateTime(ad.originalExpireTime)}, ${isExpired ? '已过期' : '未过期'}, 续期毫秒: ${hoursToMs}`;
-            } else {
-                debugInfo = `服务器时间: ${formatUTCDateTime(now)}, 续期毫秒: ${hoursToMs}`;
+            // 验证时间范围
+            const validation = validateTimeRange();
+            if (!validation.isValid) {
+                alert('时间设置无效：' + validation.message);
+                goToPrevStep();
+                return;
+            }
+
+            if (!adsData[0].server_name) {
+                alert('服务器名不能为空');
+                goToPrevStep();
+                goToPrevStep();
+                document.getElementById('serverName').focus();
+                return;
             }
             
-            return { newExpireTime, debugInfo };
+            try {
+                let response;
+                let actionMessage;
+                
+                if (isEdit) {
+                    // 编辑现有广告 - 更新数据库记录
+                    response = await fetch(`${API_BASE_URL}/ads/${adId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + getAuthToken()
+                        },
+                        body: JSON.stringify(adsData[0])
+                    });
+                    actionMessage = "广告更新成功";
+                } else {
+                    // 添加新广告 - 插入数据库
+                    response = await fetch(`${API_BASE_URL}/ads/batch`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + getAuthToken()
+                        },
+                        body: JSON.stringify(adsData)
+                    });
+                    actionMessage = `成功发布了${batchCount}条新广告`;
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `数据库操作失败: ${response.status}`);
+                }
+                
+                // 保存用户偏好设置（本地存储仅用于用户设置，不存储业务数据）
+                saveUserPreferences();
+                
+                // 关闭模态框并刷新数据
+                closeModal();
+                loadAdData(true);
+                
+                // 显示成功消息
+                showSuccessMessage("操作成功", actionMessage);
+                
+            } catch (error) {
+                console.error('数据库保存失败:', error);
+                alert(`数据库操作失败: ${error.message}`);
+            }
         }
 
-        /**
-         * 确认续期
-         */
+        // 从数据库删除广告
+        async function deleteAd(adId) {
+            if (!confirm(`确定要从数据库中删除ID为${adId}的广告吗？此操作不可恢复！`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/ads/${adId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + getAuthToken()
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `删除失败: ${response.status}`);
+                }
+                
+                // 重新加载数据
+                loadAdData(true);
+                showSuccessMessage("删除成功", `ID为${adId}的广告已从数据库中删除`);
+                
+            } catch (error) {
+                console.error('数据库删除失败:', error);
+                alert(`删除失败: ${error.message}`);
+            }
+        }
+
+        // 批量删除广告
+        async function batchDeleteAds() {
+            if (selectedIds.size === 0) {
+                alert('请先选择要删除的广告');
+                return;
+            }
+            
+            if (!confirm(`确定要从数据库中删除选中的${selectedIds.size}条广告吗？此操作不可恢复！`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/ads/batch`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getAuthToken()
+                    },
+                    body: JSON.stringify({ ids: Array.from(selectedIds) })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `批量删除失败: ${response.status}`);
+                }
+                
+                // 重新加载数据
+                loadAdData(true);
+                selectedIds.clear();
+                updateSelectedCount();
+                showSuccessMessage("批量删除成功", `已从数据库中删除${selectedIds.size}条广告`);
+                
+            } catch (error) {
+                console.error('批量删除失败:', error);
+                alert(`批量删除失败: ${error.message}`);
+            }
+        }
+
+        // 广告续期 - 更新数据库中的过期时间
         async function confirmRenew() {
             if (!currentRenewAdId) return;
             
             const renewSelect = document.getElementById('renewDurationSelect');
             const duration = renewSelect.value === 'custom'
-                ? parseInt(document.getElementById('customRenewDuration').value)
+                ? parseInt(document.getElementById('customDurationInput').value)
                 : parseInt(renewSelect.value);
                 
             if (!duration || duration <= 0) {
@@ -1749,29 +967,38 @@
                 return;
             }
             
-            const { newExpireTime } = calculateNewExpireTime(duration);
-            const newExpireTimeStr = formatUTCDateTime(newExpireTime);
+            // 计算新的过期时间
+            const currentServerTime = getCurrentServerTime();
+            const currentExpireTime = Math.max(ad.originalExpireTime, currentServerTime);
+            const newExpireTime = currentExpireTime + (duration * 60 * 60 * 1000);
             
-            if (!confirm(`确认续期${duration}小时？新的过期时间将为：${newExpireTimeStr}`)) {
+            if (!confirm(`确认将广告续期${duration}小时？\n原过期时间: ${formatUTCDateTime(ad.originalExpireTime)}\n新过期时间: ${formatUTCDateTime(newExpireTime)}`)) {
                 return;
             }
             
             try {
-                const response = await fetch(`${API_BASE_URL}/${currentRenewAdId}/renew`, {
+                // 调用服务器API更新数据库中的过期时间
+                const response = await fetch(`${API_BASE_URL}/ads/${currentRenewAdId}/renew`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ displayDuration: duration }),
-                    credentials: 'include'
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getAuthToken()
+                    },
+                    body: JSON.stringify({ 
+                        duration_hours: duration,
+                        new_expire_time: newExpireTime,
+                        updated_at: new Date(currentServerTime).toISOString()
+                    })
                 });
                 
-                const result = await response.json();
-                if (!response.ok || result.code !== 200) {
-                    throw new Error(result.error || `续期失败: ${response.statusText}`);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `续期失败: ${response.status}`);
                 }
                 
                 closeRenewModal();
-                loadAdData(true); // 强制刷新
-                showSuccessMessage("广告续期成功", "选中的广告已成功续期");
+                loadAdData(true);
+                showSuccessMessage("续期成功", "广告已成功续期并更新至数据库");
                 
             } catch (error) {
                 console.error("续期失败：", error);
@@ -1779,9 +1006,7 @@
             }
         }
 
-        /**
-         * 批量续期广告
-         */
+        // 批量续期广告
         async function batchRenewAds() {
             if (selectedIds.size === 0) {
                 alert('请先选择要续期的广告');
@@ -1794,558 +1019,664 @@
                 return;
             }
             
-            const firstAdId = Array.from(selectedIds)[0];
-            const firstAd = allAds.find(a => a.id == firstAdId);
-            if (firstAd) {
-                const { newExpireTime } = calculateNewExpireTime(parseInt(duration));
-                const newExpireTimeStr = formatUTCDateTime(newExpireTime);
-                
-                if (!confirm(`确认将选中的${selectedIds.size}条广告续期${duration}小时？\n示例新过期时间：${newExpireTimeStr}`)) {
-                    return;
-                }
-            }
-            
             try {
-                const response = await fetch(`${API_BASE_URL}/batch-renew`, {
+                // 调用服务器API进行批量续期
+                const response = await fetch(`${API_BASE_URL}/ads/batch/renew`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getAuthToken()
+                    },
                     body: JSON.stringify({ 
                         ids: Array.from(selectedIds),
-                        displayDuration: parseInt(duration)
-                    }),
-                    credentials: 'include'
+                        duration_hours: parseInt(duration),
+                        updated_at: new Date(getCurrentServerTime()).toISOString()
+                    })
                 });
                 
-                const result = await response.json();
-                if (!response.ok || result.code !== 200) {
-                    throw new Error(result.error || `批量续期失败: ${response.statusText}`);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `批量续期失败: ${response.status}`);
                 }
                 
                 loadAdData(true);
-                showSuccessMessage("批量续期成功", `成功为${selectedIds.size}条广告续期`);
+                selectedIds.clear();
+                updateSelectedCount();
+                showSuccessMessage("批量续期成功", `已为${selectedIds.size}条广告续期并更新至数据库`);
                 
             } catch (error) {
-                console.error('批量续期广告失败:', error);
+                console.error('批量续期失败:', error);
                 alert(`批量续期失败: ${error.message}`);
             }
         }
 
-        /**
-         * 格式化UTC时间戳为UTC+8显示格式
-         */
-        function formatUTCDateTime(timestamp) {
-            if (!timestamp || isNaN(timestamp)) return '';
-            try {
-                return new Date(timestamp).toLocaleString('zh-CN', { 
-                    timeZone: 'Asia/Shanghai', // 强制UTC+8时区
-                    year: 'numeric', 
-                    month: '2-digit', 
-                    day: '2-digit', 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                });
-            } catch (e) {
-                console.error('日期格式化错误:', e);
-                return '';
-            }
-        }
-
-        /**
-         * 格式化时间为input的datetime-local格式（UTC+8）
-         */
-        function formatDateTimeForInput(timestamp) {
-            if (!timestamp || isNaN(timestamp)) return '';
-            try {
-                // 创建UTC+8日期对象
-                const d = new Date(timestamp);
-                // 强制获取UTC+8的日期组件
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const hours = String(d.getHours()).padStart(2, '0');
-                const minutes = String(d.getMinutes()).padStart(2, '0');
-                return `${year}-${month}-${day}T${hours}:${minutes}`;
-            } catch (e) {
-                console.error('日期格式化错误:', e);
-                return '';
-            }
-        }
-
-        /**
-         * 将本地datetime-local转换为UTC+8时间戳
-         */
-        function convertLocalToUTC(localDateTime) {
-            if (!localDateTime) return null;
+        // 从数据库筛选广告
+        async function filterAds() {
+            const searchText = document.getElementById('searchInput').value.trim().toLowerCase();
+            const areaFilter = document.getElementById('areaFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
             
             try {
-                // 解析用户输入的UTC+8时间（格式：YYYY-MM-DDThh:mm）
-                const [datePart, timePart] = localDateTime.split('T');
-                const [year, month, day] = datePart.split('-').map(Number);
-                const [hours, minutes] = timePart.split(':').map(Number);
+                // 构建查询参数
+                const params = new URLSearchParams();
+                if (searchText) params.append('search', searchText);
+                if (areaFilter) params.append('area', areaFilter);
+                if (statusFilter) params.append('status', statusFilter);
                 
-                // 创建UTC+8日期对象（月份从0开始，需减1）
-                const utc8Date = new Date(year, month - 1, day, hours, minutes);
-                // 返回对应的时间戳
-                const timestamp = utc8Date.getTime();
-                
-                // 调试信息
-                console.log(`输入时间: ${localDateTime}`);
-                console.log(`转换后UTC+8时间戳: ${timestamp}`);
-                console.log(`转换后UTC+8时间: ${new Date(timestamp).toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}`);
-                
-                return timestamp;
-            } catch (e) {
-                console.error('本地时间转换错误:', e);
-                return null;
-            }
-        }
-
-        /**
-         * 获取倒计时文本
-         */
-        function getCountdownText(ad) {
-            if (!ad.originalExpireTime || isNaN(ad.originalExpireTime)) {
-                return '未设置过期时间';
-            }
-            
-            const now = getCurrentServerTime(); // 使用服务器时间
-            const diff = ad.originalExpireTime - now;
-            
-            if (diff <= 0) return '已过期';
-            
-            // 计算天、时、分、秒
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            
-            let result = '';
-            if (days > 0) result += `${days}天 `;
-            if (hours > 0 || days > 0) result += `${hours}时 `;
-            result += `${minutes}分 ${seconds}秒`;
-            
-            return result;
-        }
-
-        /**
-         * 获取倒计时样式类
-         */
-        function getCountdownClass(ad) {
-            if (!ad.originalExpireTime || isNaN(ad.originalExpireTime)) {
-                return 'countdown-normal';
-            }
-            
-            const now = getCurrentServerTime();
-            const diff = ad.originalExpireTime - now;
-            
-            if (diff <= 0) return 'countdown-expired';
-            if (diff < 24 * 60 * 60 * 1000) return 'countdown-warning'; // 小于24小时警告
-            return 'countdown-normal';
-        }
-
-        /**
-         * 编辑广告
-         */
-        function editAd(adId) {
-            openModal(adId);
-        }
-
-        /**
-         * 打开编辑弹窗
-         */
-        function openModal(adId = null) {
-            // 重置步骤
-            currentStep = 1;
-            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
-            document.querySelectorAll('.step-content').forEach(content => content.classList.remove('active'));
-            document.querySelector(`.step[data-step="1"]`).classList.add('active');
-            document.querySelector(`.step-content[data-step="1"]`).classList.add('active');
-            updateStepButtons();
-            
-            const modal = document.getElementById('adModal');
-            const modalTitle = document.getElementById('modalTitle');
-            
-            // 重置表单
-            document.getElementById('adForm').reset();
-            document.getElementById('adId').value = '';
-            document.getElementById('advancedFields').style.display = 'none';
-            document.getElementById('showAdvancedBtn').innerHTML = 
-                '<i class="fas fa-cog"></i> 补充更多信息（可选）';
-            
-            // 启动服务器时间显示
-            updateServerTimeDisplay();
-            if (serverTimeInterval) clearInterval(serverTimeInterval);
-            serverTimeInterval = setInterval(updateServerTimeDisplay, 1000);
-            
-            if (adId) {
-                // 编辑已有广告
-                modalTitle.textContent = '编辑广告';
-                const ad = allAds.find(a => a.id == adId);
-                if (ad) {
-                    document.getElementById('adId').value = ad.id;
-                    document.getElementById('serverName').value = ad.server_name || '';
-                    document.getElementById('openTime').value = formatDateTimeForInput(ad.originalOpenTime);
-                    document.getElementById('expireTime').value = formatDateTimeForInput(ad.originalExpireTime);
-                    document.getElementById('feature').value = ad.feature || '';
-                    document.getElementById('expRate').value = ad.exp_rate || '';
-                    document.getElementById('version').value = ad.version || '';
-                    document.getElementById('homepage').value = ad.homepage || '';
-                    document.getElementById('area').value = ad.area || 'white_area';
-                    
-                    // 如果有提醒设置，恢复设置
-                    if (ad.reminderTime) {
-                        document.getElementById('reminderTime').value = ad.reminderTime;
-                        document.getElementById('enableReminder').checked = true;
+                // 调用服务器筛选API，该API应在数据库中执行筛选查询
+                const response = await fetch(`${API_BASE_URL}/ads?${params.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + getAuthToken()
                     }
-                    
-                    // 更新预览
-                    validateTimeRange();
-                    updateExpireTimePreview();
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`筛选失败: ${response.status}`);
                 }
-            } else {
-                // 新增广告：默认显示当前服务器时间
-                modalTitle.textContent = '发布新广告';
-                const serverTime = getCurrentServerTime(); // 服务器当前时间
-                const defaultExpireTime = serverTime + 24 * 60 * 60 * 1000; // 默认24小时后
                 
-                // 设置默认值
-                document.getElementById('openTime').value = formatDateTimeForInput(serverTime);
-                document.getElementById('expireTime').value = formatDateTimeForInput(defaultExpireTime);
+                // 获取筛选后的数据库结果
+                const filteredAds = await response.json();
+                renderAdTable(filteredAds);
                 
-                // 调试信息
-                console.log(`默认开始时间(UTC+8): ${new Date(serverTime).toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}`);
-                console.log(`默认结束时间(UTC+8): ${new Date(defaultExpireTime).toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}`);
-                
-                // 更新预览
-                validateTimeRange();
-                updateExpireTimePreview();
+            } catch (error) {
+                console.error('筛选失败:', error);
+                alert(`筛选失败: ${error.message}`);
             }
+        }
+
+        // 获取当前服务器时间（考虑偏移量）
+        function getCurrentServerTime() {
+            return Date.now() + serverTimeOffset;
+        }
+
+        // 加载用户偏好设置（仅本地设置，不涉及业务数据）
+        function loadUserPreferences() {
+            const userPreferences = JSON.parse(localStorage.getItem('adManagerUserPrefs') || '{}');
+            if (userPreferences.lastArea) {
+                document.getElementById('area').value = userPreferences.lastArea;
+            }
+            if (userPreferences.reminderTime) {
+                document.getElementById('reminderTime').value = userPreferences.reminderTime;
+            }
+            if (typeof userPreferences.enableReminder !== 'undefined') {
+                document.getElementById('enableReminder').checked = userPreferences.enableReminder;
+                document.getElementById('reminderTimeGroup').style.display = userPreferences.enableReminder ? 'block' : 'none';
+            }
+        }
+
+        // 保存用户偏好设置
+        function saveUserPreferences() {
+            const userPreferences = {
+                lastArea: document.getElementById('area').value,
+                reminderTime: document.getElementById('reminderTime').value,
+                enableReminder: document.getElementById('enableReminder').checked,
+                lastSaveTime: getCurrentServerTime()
+            };
             
-            modal.classList.add('show');
+            localStorage.setItem('adManagerUserPrefs', JSON.stringify(userPreferences));
         }
 
-        /**
-         * 更新服务器时间显示
-         */
-        function updateServerTimeDisplay() {
-            const serverTime = getCurrentServerTime();
-            document.getElementById('timeDisplay').textContent = formatUTCDateTime(serverTime);
+        // 获取认证令牌（根据您的认证机制实现）
+        function getAuthToken() {
+            // 实际应用中应从安全存储中获取令牌
+            // 例如：return localStorage.getItem('authToken');
+            return 'your-auth-token'; // 替换为实际的令牌获取逻辑
         }
 
-        /**
-         * 实时预览过期时间
-         */
-        function updateExpireTimePreview() {
+        // 绑定所有事件监听器
+        function bindEventListeners() {
+            // 搜索和筛选
+            document.getElementById('searchBtn').addEventListener('click', filterAds);
+            document.getElementById('resetFilterBtn').addEventListener('click', () => {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('areaFilter').value = '';
+                document.getElementById('statusFilter').value = '';
+                loadAdData();
+            });
+            document.getElementById('refreshBtn').addEventListener('click', () => loadAdData(true));
+            
+            // 批量操作按钮
+            document.getElementById('batchDeleteBtn').addEventListener('click', batchDeleteAds);
+            document.getElementById('batchRenewBtn').addEventListener('click', batchRenewAds);
+            
+            // 新增广告按钮
+            document.getElementById('addAdBtn').addEventListener('click', () => {
+                openModal();
+            });
+            
+            // 模态框按钮
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('prevStepBtn').addEventListener('click', goToPrevStep);
+            document.getElementById('nextStepBtn').addEventListener('click', goToNextStep);
+            document.getElementById('saveAdBtn').addEventListener('click', saveAd);
+            
+            // 续期模态框按钮
+            document.getElementById('closeRenewModalBtn').addEventListener('click', closeRenewModal);
+            document.getElementById('confirmRenewBtn').addEventListener('click', confirmRenew);
+            document.getElementById('renewDurationSelect').addEventListener('change', updateNewExpireTimePreview);
+            document.getElementById('customDurationInput').addEventListener('input', updateNewExpireTimePreview);
+            
+            // 全选复选框
+            document.getElementById('selectAll').addEventListener('change', handleSelectAll);
+            
+            // 批量数量变化
+            document.getElementById('batchCount').addEventListener('input', function() {
+                const batchCount = parseInt(this.value) || 1;
+                document.getElementById('timeOffsetGroup').style.display = batchCount > 1 ? 'block' : 'none';
+            });
+            
+            // 提醒设置
+            document.getElementById('enableReminder').addEventListener('change', function() {
+                document.getElementById('reminderTimeGroup').style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // 时间选择变化时更新UTC预览
+            document.getElementById('openTime').addEventListener('change', function() {
+                const utcTime = new Date(convertLocalToUTC(this.value)).toISOString().replace('T', ' ').replace('Z', ' UTC');
+                document.getElementById('openTimeUTC').textContent = utcTime;
+                updateExpireTimePreview();
+            });
+            
+            document.getElementById('expireTime').addEventListener('change', function() {
+                const utcTime = new Date(convertLocalToUTC(this.value)).toISOString().replace('T', ' ').replace('Z', ' UTC');
+                document.getElementById('expireTimeUTC').textContent = utcTime;
+            });
+            
+            // 广告特性长度计数
+            document.getElementById('feature').addEventListener('input', function() {
+                const length = this.value.length;
+                document.getElementById('featureLength').textContent = length;
+                document.getElementById('featureLength').style.color = length > 200 ? 'var(--danger)' : 'inherit';
+            });
+        }
+
+        // 处理单个复选框变化
+        function handleCheckboxChange(checkbox) {
+            const adId = checkbox.value;
+            if (checkbox.checked) {
+                selectedIds.add(adId);
+            } else {
+                selectedIds.delete(adId);
+            }
+            updateSelectedCount();
+        }
+
+        // 处理全选
+        function handleSelectAll(e) {
+            const isChecked = e.target.checked;
+            const checkboxes = document.querySelectorAll('.ad-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                const adId = checkbox.value;
+                if (isChecked) {
+                    selectedIds.add(adId);
+                } else {
+                    selectedIds.delete(adId);
+                }
+            });
+            
+            updateSelectedCount();
+        }
+
+        // 更新选中数量显示
+        function updateSelectedCount() {
+            const count = selectedIds.size;
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('batchActions').style.display = count > 0 ? 'flex' : 'none';
+            document.getElementById('batchDeleteBtn').disabled = count === 0;
+            document.getElementById('batchRenewBtn').disabled = count === 0;
+        }
+
+        // 验证时间范围
+        function validateTimeRange() {
             const openTimeStr = document.getElementById('openTime').value;
             const expireTimeStr = document.getElementById('expireTime').value;
             
             if (!openTimeStr || !expireTimeStr) {
-                document.getElementById('expireTimePreview').textContent = 
-                    '请选择开始时间和结束时间';
-                return;
+                return { isValid: false, message: '请填写完整的时间信息' };
             }
             
             const openTime = convertLocalToUTC(openTimeStr);
             const expireTime = convertLocalToUTC(expireTimeStr);
+            const currentTime = getCurrentServerTime();
             
-            // 计算时长
-            const durationMs = expireTime - openTime;
-            const durationHours = Math.round(durationMs / (60 * 60 * 1000));
-            const durationDays = Math.floor(durationMs / (24 * 60 * 60 * 1000));
+            if (openTime >= expireTime) {
+                return { isValid: false, message: '开始时间不能晚于结束时间' };
+            }
             
-            let durationText;
-            if (durationDays >= 1) {
-                durationText = durationDays === 1 ? 
-                    `${durationDays}天 (${durationHours}小时)` : 
-                    `${durationDays}天 (${durationHours}小时)`;
+            if (expireTime <= currentTime) {
+                return { isValid: false, message: '结束时间不能早于当前时间' };
+            }
+            
+            return { isValid: true };
+        }
+
+        // 验证特性长度
+        function validateFeatureLength() {
+            const feature = document.getElementById('feature').value;
+            if (feature.length === 0) {
+                alert('请填写广告特性');
+                return false;
+            }
+            if (feature.length > 200) {
+                alert('广告特性不能超过200个字符');
+                return false;
+            }
+            return true;
+        }
+
+        // 步骤导航 - 下一步
+        function goToNextStep() {
+            if (currentStep === 1 && !document.getElementById('serverName').value.trim()) {
+                alert('请输入服务器名称');
+                return;
+            }
+            
+            if (currentStep === 2) {
+                const validation = validateTimeRange();
+                if (!validation.isValid) {
+                    alert('时间设置无效：' + validation.message);
+                    return;
+                }
+            }
+            
+            if (currentStep === 3) {
+                updateConfirmationPage();
+            }
+            
+            document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.remove('active');
+            document.querySelector(`.step-indicator-item[data-step="${currentStep}"]`).classList.remove('active');
+            
+            currentStep++;
+            
+            document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.add('active');
+            document.querySelector(`.step-indicator-item[data-step="${currentStep}"]`).classList.add('active');
+            
+            updateStepButtons();
+        }
+
+        // 步骤导航 - 上一步
+        function goToPrevStep() {
+            document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.remove('active');
+            document.querySelector(`.step-indicator-item[data-step="${currentStep}"]`).classList.remove('active');
+            
+            currentStep--;
+            
+            document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.add('active');
+            document.querySelector(`.step-indicator-item[data-step="${currentStep}"]`).classList.add('active');
+            
+            updateStepButtons();
+        }
+
+        // 更新步骤按钮状态
+        function updateStepButtons() {
+            document.getElementById('prevStepBtn').style.visibility = currentStep > 1 ? 'visible' : 'hidden';
+            
+            if (currentStep === 4) {
+                document.getElementById('nextStepBtn').style.display = 'none';
+                document.getElementById('saveAdBtn').style.display = 'inline-flex';
             } else {
-                durationText = `${durationHours}小时`;
-            }
-            
-            document.getElementById('expireTimePreview').textContent = 
-                `广告将从 ${formatUTCDateTime(openTime)} 展示至 ${formatUTCDateTime(expireTime)} (共${durationText})`;
-        }
-
-        /**
-         * 关闭弹窗
-         */
-        function closeModal() {
-            document.getElementById('adModal').classList.remove('show');
-            // 清除服务器时间显示定时器
-            if (serverTimeInterval) {
-                clearInterval(serverTimeInterval);
-                serverTimeInterval = null;
+                document.getElementById('nextStepBtn').style.display = 'inline-flex';
+                document.getElementById('saveAdBtn').style.display = 'none';
             }
         }
 
-        /**
-         * 关闭续期弹窗
-         */
-        function closeRenewModal() {
-            document.getElementById('renewModal').classList.remove('show');
-            currentRenewAdId = null;
-        }
-
-        /**
-         * 显示成功消息
-         */
-        function showSuccessMessage(title, message) {
-            document.getElementById('successTitle').textContent = title;
-            document.getElementById('successMessage').textContent = message;
-            document.getElementById('successModal').classList.add('show');
-        }
-
-        /**
-         * 保存广告（新增或编辑）
-         */
-        async function saveAd() {
-            // 检查确认框
-            if (!document.getElementById('confirmCheck').checked) {
-                alert('请确认信息无误并勾选确认框');
-                return;
-            }
-            
-            const adId = document.getElementById('adId').value;
-            const isEdit = !!adId;
-            
-            // 获取表单数据
+        // 更新确认页面信息
+        function updateConfirmationPage() {
             const serverName = document.getElementById('serverName').value.trim();
-            const openTimeStr = document.getElementById('openTime').value.trim();
-            const expireTimeStr = document.getElementById('expireTime').value.trim();
-            const enableReminder = document.getElementById('enableReminder').checked;
-            const reminderTime = document.getElementById('reminderTime').value;
+            const area = document.getElementById('area').value;
+            const areaText = document.querySelector(`#area option[value="${area}"]`).text;
+            const openTime = document.getElementById('openTime').value;
+            const expireTime = document.getElementById('expireTime').value;
+            const feature = document.getElementById('feature').value.trim();
+            const batchCount = parseInt(document.getElementById('batchCount').value);
             
-            const formData = {
-                serverName,
-                openTime: convertLocalToUTC(openTimeStr),
-                expireTime: convertLocalToUTC(expireTimeStr),
-                feature: document.getElementById('feature').value.trim(),
-                expRate: document.getElementById('expRate').value.trim(),
-                version: document.getElementById('version').value.trim(),
-                homepage: document.getElementById('homepage').value.trim(),
-                adArea: document.getElementById('area').value,
-                enableReminder,
-                reminderTime: enableReminder ? reminderTime : null
-            };
-
-            // 验证时间有效性
-            const validation = validateTimeRange();
-            if (!validation.isValid) {
-                alert('时间设置无效，请检查并修正');
-                goToPrevStep(); // 返回上一步
-                return;
+            document.getElementById('confirmServerName').textContent = serverName;
+            document.getElementById('confirmArea').textContent = areaText;
+            document.getElementById('confirmOpenTime').textContent = formatDateTimeForDisplay(openTime);
+            document.getElementById('confirmExpireTime').textContent = formatDateTimeForDisplay(expireTime);
+            document.getElementById('confirmFeature').textContent = feature || '无';
+            
+            if (batchCount > 1) {
+                document.getElementById('confirmBatchRow').style.display = 'table-row';
+                document.getElementById('confirmBatchCount').textContent = batchCount;
+            } else {
+                document.getElementById('confirmBatchRow').style.display = 'none';
+                document.getElementById('confirmBatchRow').style.display = 'none';
             }
+        }
 
-            // 其他验证
-            if (!formData.serverName) {
-                alert('服务器名不能为空');
-                goToPrevStep(); // 返回上一步
-                document.getElementById('serverName').focus();
+        // 渲染广告表格
+        function renderAdTable(ads) {
+            const tableBody = document.getElementById('adTableBody');
+            
+            if (ads.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="9" class="status-message"><i class="fas fa-info-circle"></i> 没有找到匹配的广告数据</td></tr>';
                 return;
             }
             
-            try {
-                let url = API_BASE_URL;
-                let method = 'POST';
+            let html = '';
+            ads.forEach(ad => {
+                const currentTime = getCurrentServerTime();
+                let status, statusClass;
                 
-                if (isEdit) {
-                    url = `${API_BASE_URL}/${adId}`;
-                    method = 'PUT';
-                }
-                
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData),
-                    credentials: 'include'
-                });
-                
-                const result = await response.json();
-                if (!response.ok || result.code !== 200) {
-                    throw new Error(result.error || `操作失败: ${response.statusText}`);
-                }
-                
-                // 保存用户偏好
-                saveUserPreferences();
-                
-                closeModal();
-                loadAdData(true);
-                
-                // 显示成功消息
-                if (isEdit) {
-                    showSuccessMessage("广告更新成功", "广告信息已成功更新");
+                if (ad.originalExpireTime < currentTime) {
+                    status = '已过期';
+                    statusClass = 'status-expired';
+                } else if (ad.originalOpenTime > currentTime) {
+                    status = '即将开始';
+                    statusClass = 'status-upcoming';
                 } else {
-                    showSuccessMessage("广告发布成功", "新广告已成功发布");
+                    status = '正在进行';
+                    statusClass = 'status-active';
                 }
                 
-            } catch (error) {
-                console.error('保存广告失败:', error);
-                alert(`保存失败: ${error.message}`);
-            }
-        }
-
-        /**
-         * 删除单个广告
-         */
-        async function deleteAd(adId) {
-            if (!confirm(`确定要删除ID为${adId}的广告吗？`)) return;
+                html += `
+                <tr>
+                    <td><input type="checkbox" class="ad-checkbox" value="${ad.id}" onchange="handleCheckboxChange(this)"></td>
+                    <td>${ad.id}</td>
+                    <td>${ad.server_name}</td>
+                    <td>${getAreaText(ad.area)}</td>
+                    <td>${formatUTCDateTime(ad.originalOpenTime)}</td>
+                    <td>${formatUTCDateTime(ad.originalExpireTime)}</td>
+                    <td><span class="${statusClass}">${status}</span></td>
+                    <td class="${getCountdownClass(ad)}" id="countdown-${ad.id}">${getCountdownText(ad)}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="editAd('${ad.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-primary btn-sm" onclick="openRenewModal('${ad.id}')"><i class="fas fa-redo"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAd('${ad.id}')"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+                `;
+            });
             
-            try {
-                const response = await fetch(`${API_BASE_URL}/${adId}`, {
-                    method: 'DELETE',
-                    credentials: 'include'
-                });
+            tableBody.innerHTML = html;
+        }
+
+        // 打开续期模态框
+        function openRenewModal(adId) {
+            currentRenewAdId = adId;
+            const ad = allAds.find(a => a.id == adId);
+            
+            if (ad) {
+                document.getElementById('originalExpireTime').textContent = formatUTCDateTime(ad.originalExpireTime);
+                document.getElementById('renewDurationSelect').value = '24';
+                document.getElementById('customRenewDuration').style.display = 'none';
+                updateNewExpireTimePreview();
+            }
+            
+            document.getElementById('renewModal').classList.add('active');
+        }
+
+        // 关闭续期模态框
+        function closeRenewModal() {
+            currentRenewAdId = null;
+            document.getElementById('renewModal').classList.remove('active');
+        }
+
+        // 更新新过期时间预览
+        function updateNewExpireTimePreview() {
+            if (!currentRenewAdId) return;
+            
+            const ad = allAds.find(a => a.id == currentRenewAdId);
+            if (!ad) return;
+            
+            const renewSelect = document.getElementById('renewDurationSelect');
+            const duration = renewSelect.value === 'custom'
+                ? parseInt(document.getElementById('customDurationInput').value)
+                : parseInt(renewSelect.value);
                 
-                const result = await response.json();
-                if (!response.ok || result.code !== 200) {
-                    throw new Error(result.error || `删除失败: ${response.statusText}`);
-                }
-                
-                loadAdData(true);
-                showSuccessMessage("删除成功", `ID为${adId}的广告已成功删除`);
-                
-            } catch (error) {
-                console.error('删除广告失败:', error);
-                alert(`删除失败: ${error.message}`);
+            if (!duration || duration <= 0) return;
+            
+            const currentServerTime = getCurrentServerTime();
+            const currentExpireTime = Math.max(ad.originalExpireTime, currentServerTime);
+            const newExpireTime = currentExpireTime + (duration * 60 * 60 * 1000);
+            
+            document.getElementById('newExpireTime').textContent = formatUTCDateTime(newExpireTime);
+        }
+
+        // 计算新的过期时间
+        function calculateNewExpireTime(duration) {
+            if (!currentRenewAdId) return { newExpireTime: 0 };
+            
+            const ad = allAds.find(a => a.id == currentRenewAdId);
+            if (!ad) return { newExpireTime: 0 };
+            
+            const currentServerTime = getCurrentServerTime();
+            const currentExpireTime = Math.max(ad.originalExpireTime, currentServerTime);
+            const newExpireTime = currentExpireTime + (duration * 60 * 60 * 1000);
+            
+            return { newExpireTime };
+        }
+
+        // 格式化UTC日期时间显示
+        function formatUTCDateTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toISOString().replace('T', ' ').replace('Z', ' UTC');
+        }
+
+        // 格式化日期时间用于显示
+        function formatDateTimeForDisplay(localDateTimeStr) {
+            if (!localDateTimeStr) return '';
+            const date = new Date(localDateTimeStr);
+            return date.toLocaleString() + ' (本地时间)';
+        }
+
+        // 格式化日期时间用于输入框
+        function formatDateTimeForInput(timestamp) {
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // 将本地时间转换为UTC时间戳
+        function convertLocalToUTC(localDateTimeStr) {
+            if (!localDateTimeStr) return 0;
+            return new Date(localDateTimeStr).getTime();
+        }
+
+        // 获取倒计时文本
+        function getCountdownText(ad) {
+            const currentTime = getCurrentServerTime();
+            
+            if (ad.originalExpireTime < currentTime) {
+                const diff = currentTime - ad.originalExpireTime;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                return `已过期 ${hours}小时`;
+            } else if (ad.originalOpenTime > currentTime) {
+                const diff = ad.originalOpenTime - currentTime;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                return `还有 ${hours}h${minutes}m 开始`;
+            } else {
+                const diff = ad.originalExpireTime - currentTime;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                return `剩余 ${hours}h${minutes}m`;
             }
         }
 
-        /**
-         * 批量删除广告
-         */
-        async function batchDeleteAds() {
-            if (selectedIds.size === 0) {
-                alert('请先选择要删除的广告');
+        // 获取倒计时样式类
+        function getCountdownClass(ad) {
+            const currentTime = getCurrentServerTime();
+            
+            if (ad.originalExpireTime < currentTime) {
+                return '';
+            } else if (ad.originalOpenTime > currentTime) {
+                return '';
+            } else {
+                const diff = ad.originalExpireTime - currentTime;
+                const hours = diff / (1000 * 60 * 60);
+                
+                if (hours < 1) {
+                    return 'countdown-danger';
+                } else if (hours < 24) {
+                    return 'countdown-warning';
+                }
+                return '';
+            }
+        }
+
+        // 编辑广告
+        function editAd(adId) {
+            const ad = allAds.find(a => a.id == adId);
+            if (!ad) return;
+            
+            document.getElementById('modalTitle').innerHTML = `<i class="fas fa-edit"></i> 编辑广告 #${adId}`;
+            document.getElementById('adId').value = adId;
+            
+            // 填充表单数据
+            document.getElementById('serverName').value = ad.server_name.replace(/-(\d+)$/, '');
+            document.getElementById('area').value = ad.area;
+            document.getElementById('batchCount').value = 1;
+            document.getElementById('timeOffsetGroup').style.display = 'none';
+            
+            document.getElementById('openTime').value = formatDateTimeForInput(ad.originalOpenTime);
+            document.getElementById('expireTime').value = formatDateTimeForInput(ad.originalExpireTime);
+            
+            const openUtcTime = new Date(ad.originalOpenTime).toISOString().replace('T', ' ').replace('Z', ' UTC');
+            const expireUtcTime = new Date(ad.originalExpireTime).toISOString().replace('T', ' ').replace('Z', ' UTC');
+            document.getElementById('openTimeUTC').textContent = openUtcTime;
+            document.getElementById('expireTimeUTC').textContent = expireUtcTime;
+            
+            document.getElementById('feature').value = ad.feature || '';
+            document.getElementById('featureLength').textContent = (ad.feature || '').length;
+            document.getElementById('expRate').value = ad.exp_rate || '';
+            document.getElementById('version').value = ad.version || '';
+            document.getElementById('homepage').value = ad.homepage || '';
+            
+            document.getElementById('enableReminder').checked = ad.enable_reminder || false;
+            document.getElementById('reminderTime').value = ad.reminder_time || 24;
+            document.getElementById('reminderTimeGroup').style.display = (ad.enable_reminder || false) ? 'block' : 'none';
+            
+            // 重置步骤
+            currentStep = 1;
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.step-indicator-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.step-content[data-step="1"]`).classList.add('active');
+            document.querySelector(`.step-indicator-item[data-step="1"]`).classList.add('active');
+            updateStepButtons();
+            
+            // 显示模态框
+            document.getElementById('adModal').classList.add('active');
+        }
+
+        // 打开模态框
+        function openModal(adId = null) {
+            if (adId) {
+                editAd(adId);
                 return;
             }
             
-            if (!confirm(`确定要删除选中的${selectedIds.size}条广告吗？`)) return;
+            // 重置表单
+            document.getElementById('modalTitle').innerHTML = `<i class="fas fa-plus"></i> 新增广告`;
+            document.getElementById('adId').value = '';
+            document.getElementById('serverName').value = '';
+            document.getElementById('area').value = '';
+            document.getElementById('batchCount').value = 1;
+            document.getElementById('timeOffset').value = 60;
+            document.getElementById('timeOffsetGroup').style.display = 'none';
             
-            try {
-                const response = await fetch(`${API_BASE_URL}/batch-delete`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ids: Array.from(selectedIds) }),
-                    credentials: 'include'
-                });
+            // 设置默认时间（当前时间+1小时 到 当前时间+25小时）
+            const now = new Date();
+            const defaultOpenTime = new Date(now.getTime() + 60 * 60 * 1000);
+            const defaultExpireTime = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+            
+            document.getElementById('openTime').value = formatDateTimeForInput(defaultOpenTime.getTime());
+            document.getElementById('expireTime').value = formatDateTimeForInput(defaultExpireTime.getTime());
+            
+            const openUtcTime = new Date(convertLocalToUTC(document.getElementById('openTime').value)).toISOString().replace('T', ' ').replace('Z', ' UTC');
+            const expireUtcTime = new Date(convertLocalToUTC(document.getElementById('expireTime').value)).toISOString().replace('T', ' ').replace('Z', ' UTC');
+            document.getElementById('openTimeUTC').textContent = openUtcTime;
+            document.getElementById('expireTimeUTC').textContent = expireUtcTime;
+            
+            document.getElementById('feature').value = '';
+            document.getElementById('featureLength').textContent = '0';
+            document.getElementById('expRate').value = '';
+            document.getElementById('version').value = '';
+            document.getElementById('homepage').value = '';
+            document.getElementById('enableReminder').checked = false;
+            document.getElementById('reminderTime').value = 24;
+            document.getElementById('reminderTimeGroup').style.display = 'none';
+            document.getElementById('confirmCheck').checked = false;
+            
+            // 重置步骤
+            currentStep = 1;
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.step-indicator-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.step-content[data-step="1"]`).classList.add('active');
+            document.querySelector(`.step-indicator-item[data-step="1"]`).classList.add('active');
+            updateStepButtons();
+            
+            // 显示模态框
+            document.getElementById('adModal').classList.add('active');
+        }
+
+        // 更新服务器时间显示
+        function updateServerTimeDisplay() {
+            const now = new Date(getCurrentServerTime());
+            document.getElementById('serverTimeDisplay').textContent = now.toLocaleString() + ' (本地) / ' + now.toISOString().replace('T', ' ').replace('Z', ' UTC');
+        }
+
+        // 更新过期时间预览
+        function updateExpireTimePreview() {
+            const openTimeStr = document.getElementById('openTime').value;
+            if (!openTimeStr) return;
+            
+            const openTime = new Date(openTimeStr);
+            const defaultExpireTime = new Date(openTime.getTime() + 24 * 60 * 60 * 1000); // 默认24小时后
+            
+            if (!document.getElementById('expireTime').value) {
+                document.getElementById('expireTime').value = formatDateTimeForInput(defaultExpireTime.getTime());
                 
-                const result = await response.json();
-                if (!response.ok || result.code !== 200) {
-                    throw new Error(result.error || `批量删除失败: ${response.statusText}`);
-                }
-                
-                loadAdData(true);
-                showSuccessMessage("批量删除成功", `已成功删除${selectedIds.size}条广告`);
-                
-            } catch (error) {
-                console.error('批量删除广告失败:', error);
-                alert(`批量删除失败: ${error.message}`);
+                const expireUtcTime = new Date(convertLocalToUTC(document.getElementById('expireTime').value)).toISOString().replace('T', ' ').replace('Z', ' UTC');
+                document.getElementById('expireTimeUTC').textContent = expireUtcTime;
             }
         }
 
-        /**
-         * 筛选广告
-         */
-        function filterAds() {
-            const searchText = document.getElementById('searchInput').value.trim().toLowerCase();
-            const areaFilter = document.getElementById('areaFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            const now = getCurrentServerTime();
-            
-            let filteredAds = [...allAds];
-            
-            // 按搜索文本筛选
-            if (searchText) {
-                filteredAds = filteredAds.filter(ad => 
-                    ad.server_name?.toLowerCase().includes(searchText)
-                );
-            }
-            
-            // 按区域筛选
-            if (areaFilter) {
-                filteredAds = filteredAds.filter(ad => ad.area === areaFilter);
-            }
-            
-            // 按状态筛选
-            if (statusFilter === 'expired') {
-                filteredAds = filteredAds.filter(ad => ad.originalExpireTime < now);
-            }
-            
-            renderAdTable(filteredAds);
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('adModal').classList.remove('active');
         }
 
-        /**
-         * 处理全选
-         */
-        function handleSelectAll(e) {
-            const isChecked = e.target.checked;
-            document.querySelectorAll('.ad-checkbox').forEach(checkbox => {
-                checkbox.checked = isChecked;
-                handleCheckboxChange(checkbox, true);
-            });
-        }
-
-        /**
-         * 处理复选框变化
-         */
-        function handleCheckboxChange(checkbox, skipSelectAllCheck = false) {
-            const adId = parseInt(checkbox.dataset.id);
-            if (checkbox.checked) selectedIds.add(adId);
-            else selectedIds.delete(adId);
+        // 显示成功消息
+        function showSuccessMessage(title, message) {
+            document.getElementById('notificationTitle').textContent = title;
+            document.getElementById('notificationMessage').textContent = message;
+            const notification = document.getElementById('successNotification');
+            notification.classList.add('show');
             
-            updateSelectedCount();
-            
-            // 更新全选框状态
-            if (!skipSelectAllCheck) {
-                const checkboxes = document.querySelectorAll('.ad-checkbox');
-                document.getElementById('selectAll').checked = checkboxes.length > 0 && 
-                    Array.from(checkboxes).every(cb => cb.checked);
-            }
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
         }
 
-        /**
-         * 更新选中数量显示
-         */
-        function updateSelectedCount() {
-            document.getElementById('selectedCount').textContent = `已选择 ${selectedIds.size} 项`;
-            document.getElementById('batchDeleteBtn').disabled = selectedIds.size === 0;
-            document.getElementById('batchRenewBtn').disabled = selectedIds.size === 0;
+        // 获取地区文本
+        function getAreaText(areaCode) {
+            const option = document.querySelector(`#areaFilter option[value="${areaCode}"]`);
+            return option ? option.textContent : areaCode;
         }
 
-        /**
-         * 启动倒计时更新定时器
-         */
+        // 启动倒计时更新
         function startCountdownUpdates() {
             if (countdownInterval) clearInterval(countdownInterval);
             
-            // 每秒更新一次倒计时
             countdownInterval = setInterval(() => {
-                document.querySelectorAll('.countdown').forEach(element => {
-                    const adId = element.dataset.id;
-                    const ad = allAds.find(a => a.id == adId);
-                    if (ad) {
-                        element.className = `countdown ${getCountdownClass(ad)}`;
+                allAds.forEach(ad => {
+                    const element = document.getElementById(`countdown-${ad.id}`);
+                    if (element) {
                         element.textContent = getCountdownText(ad);
+                        element.className = getCountdownClass(ad);
                     }
                 });
-            }, 1000);
-        }
-
-        /**
-         * 启动当前时间更新定时器
-         */
-        function startCurrentTimeUpdates() {
-            if (currentTimeInterval) clearInterval(currentTimeInterval);
-            
-            // 每秒更新一次当前时间显示（服务器时间）
-            currentTimeInterval = setInterval(() => {
-                document.getElementById('currentUtc8Time').textContent = formatUTCDateTime(getCurrentServerTime());
-            }, 1000);
-            
-            // 立即更新
-            document.getElementById('currentUtc8Time').textContent = formatUTCDateTime(getCurrentServerTime());
+            }, 60000); // 每分钟更新一次
         }
     </script>
 </body>

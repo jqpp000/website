@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcrypt'); // 新增：用于密码加密
 const app = express();
 const port = 3000;
 
@@ -9,54 +10,53 @@ const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
   password: '', // 替换为你的数据库密码
-  database: 'db', // 确保数据库存在
+  database: 'game_ad_db', // 建议使用更明确的数据库名
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  timezone: '+08:00' // 强制数据库连接使用UTC+8时区
+  timezone: '+00:00' // 改为UTC时区存储，与前端统一
 });
 
-// 初始化数据库表结构
+// 初始化数据库表结构（修复版）
 async function initializeDatabase() {
   try {
     const connection = await pool.getConnection();
     
-    // 创建广告表（确保时间字段使用UTC+8）
+    // 创建广告表（匹配前端需求的字段结构）
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS ads (
         id INT AUTO_INCREMENT PRIMARY KEY,
         server_name VARCHAR(255) NOT NULL,
-        open_time DATETIME NOT NULL, -- 存储UTC+8时间
+        area ENUM('CN', 'US', 'EU', 'JP', 'KR', 'OTHER') NOT NULL, -- 匹配前端地区值
+        open_time DATETIME NOT NULL, -- 存储UTC时间
+        expire_time DATETIME NOT NULL, -- 直接存储过期时间，不通过计算
         feature TEXT,
         exp_rate VARCHAR(50),
         version VARCHAR(50),
         homepage VARCHAR(255),
-        display_duration INT NOT NULL DEFAULT 24, -- 展示时长（小时）
-        area ENUM('top-yellow', 'white', 'orange', 'green') NOT NULL DEFAULT 'white',
+        enable_reminder BOOLEAN DEFAULT FALSE,
+        reminder_time INT, -- 提前提醒时间（小时）
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        -- 过期时间 = 开机时间 + 展示时长（UTC+8计算）
-        expire_time DATETIME GENERATED ALWAYS AS (
-          DATE_ADD(open_time, INTERVAL display_duration HOUR)
-        ) STORED
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
 
-    // 创建管理员表
+    // 创建管理员表（增强安全性）
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS admin (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL, -- 存储加密后的密码
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     
-    // 插入默认管理员账号 (密码: admin123)
+    // 插入默认管理员账号 (密码: admin123，已加密)
+    const hashedPassword = await bcrypt.hash('admin123', 10);
     await connection.execute(`
       INSERT IGNORE INTO admin (username, password) 
-      VALUES ('admin', '$2b$10$QJ1sfn3QJZ3wH6QZJZJZJO0eQJZJZJZJZJZJZJZJZJZJZJZJ')
-    `);
+      VALUES ('admin', ?)
+    `, [hashedPassword]);
     
     console.log('数据库表结构初始化完成');
     connection.release();
@@ -68,33 +68,16 @@ async function initializeDatabase() {
 // 初始化数据库
 initializeDatabase();
 
-// 跨域配置
+// 中间件配置
 app.use(cors({
   origin: ['http://localhost:5500', 'http://127.0.0.1:5500'],
   credentials: true
 }));
 app.use(express.json());
 
-// 工具函数: 区域值映射转换
-const mapAreaValue = (area) => {
-  const areaMap = {
-    'top_yellow': 'top-yellow',
-    'white_area': 'white',
-    'orange_area': 'orange',
-    'green_area': 'green'
-  };
-  return areaMap[area] || area;
-};
-
-// 工具函数: 反向映射区域值
-const reverseMapAreaValue = (area) => {
-  const areaMap = {
-    'top-yellow': 'top_yellow',
-    'white': 'white_area',
-    'orange': 'orange_area',
-    'green': 'green_area'
-  };
-  return areaMap[area] || area;
+// 工具函数：将UTC时间转换为时间戳（毫秒）
+const datetimeToTimestamp = (datetime) => {
+  return new Date(datetime).getTime();
 };
 
 // 1. 测试路由
@@ -102,353 +85,251 @@ app.get('/api/test', (req, res) => {
   res.json({ code: 200, message: '服务器正常运行' });
 });
 
-// 2. 获取服务器当前UTC+8时间（核心修复：返回正确的UTC+8时间戳）
-app.get('/api/ads/current-time', async (req, res) => {
+// 2. 获取服务器当前时间（UTC）
+app.get('/api/time', async (req, res) => {
   try {
-    // 关键修复：通过数据库直接获取UTC+8时间戳（避免JavaScript时区转换问题）
     const [rows] = await pool.execute(`
-      SELECT UNIX_TIMESTAMP(CONVERT_TZ(NOW(), '+00:00', '+08:00')) * 1000 AS timestamp
+      SELECT UNIX_TIMESTAMP(UTC_TIMESTAMP()) * 1000 AS timestamp
     `);
-    const serverTime = rows[0].timestamp; // 毫秒级UTC+8时间戳
-    
-    // 生成带UTC+8时区标记的时间格式
-    const utc8Date = new Date(serverTime);
-    const utc8Datetime = utc8Date.toISOString().replace('Z', '+08:00');
+    const serverTime = rows[0].timestamp; // 毫秒级UTC时间戳
     
     res.json({
-      code: 200,
-      data: {
-        timestamp: serverTime, // 确保是UTC+8时间戳
-        datetime: utc8Datetime // 明确标记为UTC+8
-      }
+      currentTime: new Date(serverTime).toISOString() // 符合前端预期的ISO格式
     });
   } catch (error) {
     console.error('获取服务器时间失败:', error);
-    res.status(500).json({ code: 500, error: '获取服务器时间失败' });
+    res.status(500).json({ error: '获取服务器时间失败' });
   }
 });
 
-// 3. 管理员登录
+// 3. 管理员登录（修复密码验证）
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     const [rows] = await pool.execute('SELECT * FROM admin WHERE username = ?', [username]);
     
     if (rows.length === 0) {
-      return res.status(401).json({ code: 401, error: '用户名或密码错误' });
+      return res.status(401).json({ error: '用户名或密码错误' });
     }
     
-    // 简化验证（实际项目需用bcrypt）
-    if (password === 'admin123') {
-      res.json({ code: 200, message: '登录成功', token: 'admin_token' });
+    // 使用bcrypt验证密码
+    const isPasswordValid = await bcrypt.compare(password, rows[0].password);
+    if (isPasswordValid) {
+      res.json({ message: '登录成功', token: 'admin_token' }); // 实际项目应使用JWT
     } else {
-      res.status(401).json({ code: 401, error: '用户名或密码错误' });
+      res.status(401).json({ error: '用户名或密码错误' });
     }
   } catch (error) {
     console.error('登录失败:', error);
-    res.status(500).json({ code: 500, error: '登录失败' });
+    res.status(500).json({ error: '登录失败' });
   }
 });
 
-// 4. 获取广告列表
+// 4. 获取广告列表（核心修复：匹配前端需求）
 app.get('/api/ads', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
-    const area = req.query.area;
-    const offset = (page - 1) * pageSize;
+    const { search, area, status } = req.query;
+    let query = `
+      SELECT id, server_name, area, open_time, expire_time, 
+             feature, exp_rate, version, homepage, 
+             enable_reminder, reminder_time
+      FROM ads
+      WHERE 1=1
+    `;
+    const params = [];
     
-    let countQuery = 'SELECT COUNT(*) AS total FROM ads';
-    let listQuery = 'SELECT * FROM ads ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    let countParams = [];
-    let listParams = [pageSize, offset];
-    
-    // 区域筛选
-    if (area) {
-      const mappedArea = mapAreaValue(area);
-      countQuery = 'SELECT COUNT(*) AS total FROM ads WHERE area = ?';
-      listQuery = 'SELECT * FROM ads WHERE area = ? ORDER BY created_at DESC LIMIT ? OFFSET ?';
-      countParams = [mappedArea];
-      listParams = [mappedArea, pageSize, offset];
+    // 搜索筛选（服务器名或特性）
+    if (search) {
+      query += ` AND (server_name LIKE ? OR feature LIKE ?)`;
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam);
     }
     
-    // 查询总数
-    const [countResult] = await pool.execute(countQuery, countParams);
-    const total = countResult[0].total;
+    // 地区筛选
+    if (area) {
+      query += ` AND area = ?`;
+      params.push(area);
+    }
     
-    // 查询列表
-    const [ads] = await pool.execute(listQuery, listParams);
+    // 状态筛选（基于当前UTC时间）
+    if (status) {
+      const [timeRows] = await pool.execute('SELECT UTC_TIMESTAMP() AS now');
+      const currentTime = timeRows[0].now;
+      
+      switch (status) {
+        case 'active':
+          query += ` AND open_time <= ? AND expire_time > ?`;
+          params.push(currentTime, currentTime);
+          break;
+        case 'upcoming':
+          query += ` AND open_time > ?`;
+          params.push(currentTime);
+          break;
+        case 'expired':
+          query += ` AND expire_time <= ?`;
+          params.push(currentTime);
+          break;
+      }
+    }
     
-    // 转换区域值并格式化时间
-    const formattedAds = ads.map(ad => ({
-      ...ad,
-      area: reverseMapAreaValue(ad.area),
-      // 确保时间字段返回UTC+8字符串格式
-      open_time: ad.open_time.toISOString().slice(0, 19).replace('T', ' '),
-      expire_time: ad.expire_time.toISOString().slice(0, 19).replace('T', ' ')
+    // 按开始时间排序
+    query += ` ORDER BY open_time DESC`;
+    
+    const [rows] = await pool.execute(query, params);
+    
+    // 转换为前端需要的格式（时间戳）
+    const ads = rows.map(ad => ({
+      id: ad.id,
+      server_name: ad.server_name,
+      area: ad.area,
+      originalOpenTime: datetimeToTimestamp(ad.open_time), // 转换为毫秒时间戳
+      originalExpireTime: datetimeToTimestamp(ad.expire_time),
+      feature: ad.feature,
+      exp_rate: ad.exp_rate,
+      version: ad.version,
+      homepage: ad.homepage,
+      enable_reminder: ad.enable_reminder,
+      reminder_time: ad.reminder_time
     }));
     
-    res.json({
-      code: 200,
-      data: {
-        list: formattedAds,
-        pagination: {
-          page,
-          pageSize,
-          total,
-          totalPages: Math.ceil(total / pageSize)
-        }
-      }
-    });
+    res.json(ads);
   } catch (error) {
     console.error('获取广告列表失败:', error);
-    res.status(500).json({ code: 500, error: '获取广告列表失败' });
+    res.status(500).json({ error: '获取广告列表失败' });
   }
 });
 
-// 5. 获取单个广告详情
-app.get('/api/ads/:id', async (req, res) => {
+// 5. 新增广告（批量）
+app.post('/api/ads/batch', async (req, res) => {
   try {
-    const id = req.params.id;
-    const [rows] = await pool.execute('SELECT * FROM ads WHERE id = ?', [id]);
-    
-    if (rows.length === 0) {
-      return res.status(404).json({ code: 404, error: '广告不存在' });
+    const ads = req.body;
+    if (!Array.isArray(ads) || ads.length === 0) {
+      return res.status(400).json({ error: '请提供有效的广告数据' });
     }
     
-    const ad = rows[0];
-    res.json({ 
-      code: 200, 
-      data: {
-        ...ad,
-        area: reverseMapAreaValue(ad.area),
-        open_time: ad.open_time.toISOString().slice(0, 19).replace('T', ' '),
-        expire_time: ad.expire_time.toISOString().slice(0, 19).replace('T', ' ')
-      } 
-    });
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+    
+    const results = [];
+    for (const ad of ads) {
+      const [result] = await connection.execute(`
+        INSERT INTO ads (
+          server_name, area, open_time, expire_time, 
+          feature, exp_rate, version, homepage, 
+          enable_reminder, reminder_time
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        ad.server_name,
+        ad.area,
+        new Date(ad.open_time).toISOString().slice(0, 19).replace('T', ' '),
+        new Date(ad.expire_time).toISOString().slice(0, 19).replace('T', ' '),
+        ad.feature,
+        ad.exp_rate,
+        ad.version,
+        ad.homepage,
+        ad.enable_reminder ? 1 : 0,
+        ad.reminder_time
+      ]);
+      
+      results.push({ id: result.insertId, ...ad });
+    }
+    
+    await connection.commit();
+    connection.release();
+    
+    res.status(201).json(results);
   } catch (error) {
-    console.error('获取广告详情失败:', error);
-    res.status(500).json({ code: 500, error: '获取广告详情失败' });
+    console.error('新增广告失败:', error);
+    res.status(500).json({ error: '新增广告失败' });
   }
 });
 
-// 6. 创建新广告（增强时间验证）
-app.post('/api/ads', async (req, res) => {
-  try {
-    const {
-      serverName,
-      openTime, // 前端传递的是UTC+8时间戳（毫秒）
-      feature = '',
-      expRate = '',
-      version = '',
-      homepage = '',
-      displayDuration = 24,
-      adArea = 'white'
-    } = req.body;
-    
-    // 验证必填字段
-    if (!serverName || !openTime) {
-      return res.status(400).json({ code: 400, error: '服务器名和开机时间为必填项' });
-    }
-
-    // 后端增强验证：通过数据库获取当前UTC+8时间进行对比
-    const [timeRows] = await pool.execute(`
-  SELECT UNIX_TIMESTAMP(CONVERT_TZ(NOW(), '+00:00', '+08:00')) * 1000 AS \`current_time\`
-`);
-    const currentTime = timeRows[0].current_time; // 数据库UTC+8时间戳
-    
-    // 允许1分钟误差
-    if (openTime <= currentTime - 60 * 1000) {
-      return res.status(400).json({ 
-        code: 400, 
-        error: '开机时间不能早于当前时间，请重新设置',
-        debug: `当前时间: ${new Date(currentTime).toLocaleString()}, 提交时间: ${new Date(openTime).toLocaleString()}`
-      });
-    }
-    
-    // 转换时间戳为UTC+8的DATETIME格式
-    const openTimeDate = new Date(openTime);
-    const openTimeStr = openTimeDate.toISOString().slice(0, 19).replace('T', ' ');
-    const mappedArea = mapAreaValue(adArea);
-    
-    const [result] = await pool.execute(
-      `INSERT INTO ads (
-        server_name, open_time, feature, exp_rate, version, 
-        homepage, display_duration, area
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [serverName, openTimeStr, feature, expRate, version, homepage, displayDuration, mappedArea]
-    );
-    
-    res.status(201).json({
-      code: 200,
-      message: '广告创建成功',
-      data: { id: result.insertId }
-    });
-  } catch (error) {
-    console.error('创建广告失败:', error);
-    res.status(500).json({ code: 500, error: '创建广告失败' });
-  }
-});
-
-// 7. 更新广告
+// 6. 更新广告
 app.put('/api/ads/:id', async (req, res) => {
   try {
-    const id = req.params.id;
-    const {
-      serverName,
-      openTime, // UTC+8时间戳（毫秒）
-      feature = '',
-      expRate = '',
-      version = '',
-      homepage = '',
-      displayDuration = 24,
-      adArea = 'white'
-    } = req.body;
+    const { id } = req.params;
+    const ad = req.body;
     
-    // 验证必填字段
-    if (!serverName || !openTime) {
-      return res.status(400).json({ code: 400, error: '服务器名和开机时间为必填项' });
-    }
-
-    // 后端验证：通过数据库获取当前UTC+8时间
-    const [timeRows] = await pool.execute(`
-      SELECT UNIX_TIMESTAMP(CONVERT_TZ(NOW(), '+00:00', '+08:00')) * 1000 AS current_time
-    `);
-    const currentTime = timeRows[0].current_time;
+    await pool.execute(`
+      UPDATE ads SET
+        server_name = ?, area = ?, open_time = ?, expire_time = ?,
+        feature = ?, exp_rate = ?, version = ?, homepage = ?,
+        enable_reminder = ?, reminder_time = ?, updated_at = UTC_TIMESTAMP()
+      WHERE id = ?
+    `, [
+      ad.server_name,
+      ad.area,
+      new Date(ad.open_time).toISOString().slice(0, 19).replace('T', ' '),
+      new Date(ad.expire_time).toISOString().slice(0, 19).replace('T', ' '),
+      ad.feature,
+      ad.exp_rate,
+      ad.version,
+      ad.homepage,
+      ad.enable_reminder ? 1 : 0,
+      ad.reminder_time,
+      id
+    ]);
     
-    if (openTime <= currentTime - 60 * 1000) {
-      return res.status(400).json({ 
-        code: 400, 
-        error: '开机时间不能早于当前时间，请重新设置' 
-      });
-    }
-    
-    // 检查广告是否存在
-    const [rows] = await pool.execute('SELECT * FROM ads WHERE id = ?', [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ code: 404, error: '广告不存在' });
-    }
-    
-    // 转换时间戳为UTC+8的DATETIME格式
-    const openTimeStr = new Date(openTime).toISOString().slice(0, 19).replace('T', ' ');
-    const mappedArea = mapAreaValue(adArea);
-    
-    // 更新广告
-    await pool.execute(
-      `UPDATE ads SET 
-        server_name = ?, open_time = ?, feature = ?, exp_rate = ?, 
-        version = ?, homepage = ?, display_duration = ?, area = ?
-       WHERE id = ?`,
-      [serverName, openTimeStr, feature, expRate, version, homepage, displayDuration, mappedArea, id]
-    );
-    
-    res.json({ code: 200, message: '广告更新成功' });
+    res.json({ id, ...ad });
   } catch (error) {
     console.error('更新广告失败:', error);
-    res.status(500).json({ code: 500, error: '更新广告失败' });
+    res.status(500).json({ error: '更新广告失败' });
   }
 });
 
-// 8. 删除单个广告
+// 7. 删除单个广告
 app.delete('/api/ads/:id', async (req, res) => {
   try {
-    const id = req.params.id;
-    
-    // 检查广告是否存在
-    const [rows] = await pool.execute('SELECT * FROM ads WHERE id = ?', [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ code: 404, error: '广告不存在' });
-    }
-    
-    // 删除广告
+    const { id } = req.params;
     await pool.execute('DELETE FROM ads WHERE id = ?', [id]);
-    
-    res.json({ code: 200, message: '广告删除成功' });
+    res.json({ success: true, message: '广告已删除' });
   } catch (error) {
     console.error('删除广告失败:', error);
-    res.status(500).json({ code: 500, error: '删除广告失败' });
+    res.status(500).json({ error: '删除广告失败' });
   }
 });
 
-// 9. 批量删除广告
-app.post('/api/ads/batch-delete', async (req, res) => {
+// 8. 批量删除广告
+app.delete('/api/ads/batch', async (req, res) => {
   try {
     const { ids } = req.body;
-    
     if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ code: 400, error: '请提供要删除的广告ID列表' });
+      return res.status(400).json({ error: '请提供有效的广告ID列表' });
     }
     
-    // 构建参数化查询
     const placeholders = ids.map(() => '?').join(',');
     await pool.execute(`DELETE FROM ads WHERE id IN (${placeholders})`, ids);
     
-    res.json({ code: 200, message: `成功删除${ids.length}条广告` });
+    res.json({ success: true, message: `已删除${ids.length}条广告` });
   } catch (error) {
-    console.error('批量删除广告失败:', error);
-    res.status(500).json({ code: 500, error: '批量删除广告失败' });
+    console.error('批量删除失败:', error);
+    res.status(500).json({ error: '批量删除失败' });
   }
 });
 
-// 10. 单个广告续期（基于服务器时间）
+// 9. 广告续期
 app.post('/api/ads/:id/renew', async (req, res) => {
   try {
-    const id = req.params.id;
-    const { displayDuration } = req.body;
+    const { id } = req.params;
+    const { duration_hours, new_expire_time } = req.body;
     
-    // 验证参数
-    if (!displayDuration || displayDuration <= 0) {
-      return res.status(400).json({ code: 400, error: '请提供有效的续期时长（小时）' });
-    }
+    await pool.execute(`
+      UPDATE ads SET
+        expire_time = ?, updated_at = UTC_TIMESTAMP()
+      WHERE id = ?
+    `, [
+      new Date(new_expire_time).toISOString().slice(0, 19).replace('T', ' '),
+      id
+    ]);
     
-    // 检查广告是否存在
-    const [rows] = await pool.execute('SELECT * FROM ads WHERE id = ?', [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ code: 404, error: '广告不存在' });
-    }
-    
-    // 续期逻辑：累加展示时长
-    await pool.execute(
-      `UPDATE ads SET 
-        display_duration = display_duration + ?
-       WHERE id = ?`,
-      [displayDuration, id]
-    );
-    
-    res.json({ code: 200, message: `广告已成功续期${displayDuration}小时` });
+    res.json({ success: true, message: '广告已续期' });
   } catch (error) {
     console.error('广告续期失败:', error);
-    res.status(500).json({ code: 500, error: '广告续期失败' });
-  }
-});
-
-// 11. 批量续期广告
-app.post('/api/ads/batch-renew', async (req, res) => {
-  try {
-    const { ids, displayDuration } = req.body;
-    
-    if (!Array.isArray(ids) || ids.length === 0 || !displayDuration || displayDuration <= 0) {
-      return res.status(400).json({ code: 400, error: '请提供要续期的广告ID列表和有效的续期时长（小时）' });
-    }
-    
-    // 构建参数化查询
-    const placeholders = ids.map(() => '?').join(',');
-    await pool.execute(
-      `UPDATE ads SET 
-        display_duration = display_duration + ?
-       WHERE id IN (${placeholders})`,
-      [displayDuration, ...ids]
-    );
-    
-    res.json({ code: 200, message: `成功为${ids.length}条广告续期${displayDuration}小时` });
-  } catch (error) {
-    console.error('批量续期广告失败:', error);
-    res.status(500).json({ code: 500, error: '批量续期广告失败' });
+    res.status(500).json({ error: '广告续期失败' });
   }
 });
 
 // 启动服务器
 app.listen(port, () => {
   console.log(`服务器运行在 http://localhost:${port}`);
-  console.log('时间配置: 已强制使用UTC+8时区');
 });

@@ -66,13 +66,12 @@
       max-width: 1000px;
       margin: 0 auto;
       width: 100%;
-      padding: 0; /* 移除内边距，避免宽度计算问题 */
+      padding: 0;
     }
     
     .ad-container {
       padding: 0;
-      border: 1px solid #ddd; /* 合并边框为单一边框 */
-      overflow-x: auto;
+      border: 1px solid #ddd;
     }
     
     .top-info {
@@ -116,6 +115,7 @@
       margin: 0;
       width: 100%;
       box-sizing: border-box;
+      text-align: center; /* 标题居中 */
     }
     
     /* 区域背景色定义 */
@@ -138,30 +138,27 @@
     /* 所有表格共用相同样式 */
     .server-table {
       width: 100%;
-      min-width: 1000px;
       border-collapse: collapse;
-      table-layout: fixed;
-      border: none; /* 移除表格自身边框，使用容器边框 */
+      border: none;
+      table-layout: fixed; /* 关键：固定表格布局，确保列宽一致 */
     }
     
     .full-table th,
     .full-table td {
-      padding: 5px 8px; /* 增加内边距 */
-      text-align: center;
+      padding: 5px 8px;
+      text-align: center; /* 所有单元格内容居中 */
       border: 1px solid #ddd;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: visible;
+      text-overflow: clip;
       font-family: "SimSun", serif !important;
       font-size: 12px !important;
       font-weight: normal !important;
-      line-height: 1.5; /* 调整行高 */
+      line-height: 1.5;
     }
     
-    /* 游戏版本特色介绍列特殊样式 - 允许换行 */
+    /* 游戏版本特色介绍列特殊样式 - 不换行、完整显示且居中 */
     .full-table td.col-42 {
-      white-space: normal; /* 允许文本换行 */
-      height: auto; /* 自动调整高度 */
-      text-align: left; /* 左对齐便于阅读 */
+      white-space: nowrap; /* 不换行 */
     }
     
     /* 表头样式 */
@@ -169,7 +166,7 @@
       background: url(../images1/qq.jpg);
       color: #A84200;
       font-weight: bold !important;
-      white-space: nowrap; /* 表头不换行 */
+      white-space: nowrap;
     }
     
     /* 行背景色和鼠标悬停效果 */
@@ -208,7 +205,7 @@
     
     /* 移除标签美化效果 */
     .feature-text {
-      color: #FF0000 !important; /* 使用品牌强力推荐的红色作为主要颜色 */
+      color: #FF0000 !important;
       font-family: "SimSun", serif !important;
       font-size: 12px !important;
       font-weight: normal !important;
@@ -218,14 +215,14 @@
     .recommendation-tag {
       margin-left: 5px;
       font-size: 12px !important;
-      font-weight: normal !important; /* 确保不加粗 */
+      font-weight: normal !important;
     }
     
     /* 各区域推荐标签颜色 */
-    .white-area .recommendation-tag { color: #000000; } /* 白区黑色 */
-    .orange-area .recommendation-tag { color: #FF9900; } /* 橙区橙色 */
-    .green-area .recommendation-tag { color: #009966; } /* 绿区青色/绿色 */
-    .top-yellow .recommendation-tag { color: #FF0000; } /* 黄区红色 */
+    .white-area .recommendation-tag { color: #000000; }
+    .orange-area .recommendation-tag { color: #FF9900; }
+    .green-area .recommendation-tag { color: #009966; }
+    .top-yellow .recommendation-tag { color: #FF0000; }
     
     .bottom-banner {
       background-color: #FFFFFF;
@@ -255,6 +252,13 @@
         font-size: 14px;
       }
     }
+
+    /* 隐藏白色、橙色和绿色区域的标题 */
+    .white-area .section-title,
+    .orange-area .section-title,
+    .green-area .section-title {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -266,7 +270,7 @@
     <div class="top-banner"></div>
 
     <div class="ad-container">
-      <!-- 01广告区域 - 黄色区域 -->
+      <!-- 01广告区域 - 黄色区域（保留标题和表头） -->
       <div class="ad-section top-yellow">
         <div class="section-title">↓以下为本站强力推荐(20条)长久稳定品牌大区→</div>
         <table class="server-table full-table table-cols">
@@ -286,29 +290,61 @@
         </table>
       </div>
 
-      <!-- 02广告区域 - 白色区域 -->
+      <!-- 02广告区域 - 白色区域（隐藏标题，保留内容） -->
       <div class="ad-section white-area">
+        <div class="section-title">白色区域服务器列表</div>
         <table class="server-table full-table table-cols">
           <tbody id="white-area-list">
-            <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+            <tr>
+              <td class="col-15"><span class="server-name" style="color: #000080;">奇迹3区</span></td>
+              <td class="col-15" style="color: #000;">8月14日<span class="recommendation-tag">套白强力推荐</span></td>
+              <td class="col-42"><span class="feature-text">▄【新区开放】▄【多重福利】▄【公平竞技】▄【长期稳定】▄</span></td>
+              <td class="col-8" style="color: #000;">8倍</td>
+              <td class="col-10" style="color: #000;">加强版</td>
+              <td class="col-10"><a href="#" target="_blank" class="btn-enter" style="color: white;">点击查看</a></td>
+            </tr>
+            <tr>
+              <td class="col-15"><span class="server-name" style="color: #000080;">奇迹6区</span></td>
+              <td class="col-15" style="color: #000;">8月14日<span class="recommendation-tag">套白强力推荐</span></td>
+              <td class="col-42"><span class="feature-text">【独家玩法】【全新地图】【装备靠打】【自由交易】</span></td>
+              <td class="col-8" style="color: #000;">6倍</td>
+              <td class="col-10" style="color: #000;">革新版</td>
+              <td class="col-10"><a href="#" target="_blank" class="btn-enter" style="color: white;">点击查看</a></td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- 03广告区域 - 橙色区域 -->
+      <!-- 03广告区域 - 橙色区域（隐藏标题，保留内容） -->
       <div class="ad-section orange-area">
+        <div class="section-title">橙色区域服务器列表</div>
         <table class="server-table full-table table-cols">
           <tbody id="orange-area-list">
-            <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+            <tr>
+              <td class="col-15"><span class="server-name" style="color: #000080;">奇迹4区</span></td>
+              <td class="col-15" style="color: #000;">8月14日<span class="recommendation-tag">套黄强力推荐</span></td>
+              <td class="col-42"><span class="feature-text">▄【独家版本】▄【稳定运营】▄【玩家至上】▄【无套路】▄</span></td>
+              <td class="col-8" style="color: #000;">15倍</td>
+              <td class="col-10" style="color: #000;">变态版</td>
+              <td class="col-10"><a href="#" target="_blank" class="btn-enter" style="color: white;">点击查看</a></td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- 04广告区域 - 绿色区域 -->
+      <!-- 04广告区域 - 绿色区域（隐藏标题，保留内容） -->
       <div class="ad-section green-area">
+        <div class="section-title">绿色区域服务器列表</div>
         <table class="server-table full-table table-cols">
           <tbody id="green-area-list">
-            <tr><td colspan="6" class="loading"><i class="fas fa-circle-notch fa-spin"></i> 加载中...</td></tr>
+            <tr>
+              <td class="col-15"><span class="server-name" style="color: #000080;">奇迹5区</span></td>
+              <td class="col-15" style="color: #000;">8月14日<span class="recommendation-tag">套青强力推荐</span></td>
+              <td class="col-42"><span class="feature-text">【公益服务器】【无任何收费】【公平公正】【长期开放】</span></td>
+              <td class="col-8" style="color: #000;">3倍</td>
+              <td class="col-10" style="color: #000;">纯净版</td>
+              <td class="col-10"><a href="#" target="_blank" class="btn-enter" style="color: white;">点击查看</a></td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -373,7 +409,8 @@
 
       } catch (error) {
         console.error('加载失败，使用模拟数据:', error);
-        loadMockData();
+        // 注释掉自动加载模拟数据，保持页面已有的静态数据
+        // loadMockData();
       }
     }
 
@@ -484,7 +521,7 @@
       }
     }
 
-    // 模拟数据加载 - 添加了完整的特色介绍示例
+    // 模拟数据加载
     function loadMockData() {
       const now = new Date();
       const mockData = {
@@ -547,15 +584,6 @@
             feature: "【公益服务器】【无任何收费】【公平公正】【长期开放】",
             exp_rate: "3倍",
             version: "纯净版",
-            homepage: "#",
-            isRecommended: true
-          },
-          {
-            server_name: "奇迹7区",
-            open_time: new Date(now.getTime() - 21600000).toISOString(),
-            feature: "▄【低消费】▄【高回报】▄【新手扶持】▄【每日活动】▄",
-            exp_rate: "4倍",
-            version: "公益服",
             homepage: "#",
             isRecommended: true
           }
