@@ -8,11 +8,12 @@ const mysql = require('mysql2/promise');
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: '', // 请替换为你的数据库密码
-  database: 'db', // 请确保该数据库已存在
+  password: '', // 替换为你的数据库密码
+  database: 'db', // 确保数据库存在
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  timezone: '+08:00' // 强制数据库连接使用UTC+8时区
 });
 
 // 初始化数据库表结构
@@ -20,20 +21,21 @@ async function initializeDatabase() {
   try {
     const connection = await pool.getConnection();
     
-    // 创建广告表
+    // 创建广告表（确保时间字段使用UTC+8）
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS ads (
         id INT AUTO_INCREMENT PRIMARY KEY,
         server_name VARCHAR(255) NOT NULL,
-        open_time DATETIME NOT NULL,
+        open_time DATETIME NOT NULL, -- 存储UTC+8时间
         feature TEXT,
         exp_rate VARCHAR(50),
         version VARCHAR(50),
         homepage VARCHAR(255),
-        display_duration INT NOT NULL DEFAULT 24,
+        display_duration INT NOT NULL DEFAULT 24, -- 展示时长（小时）
         area ENUM('top-yellow', 'white', 'orange', 'green') NOT NULL DEFAULT 'white',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        -- 过期时间 = 开机时间 + 展示时长（UTC+8计算）
         expire_time DATETIME GENERATED ALWAYS AS (
           DATE_ADD(open_time, INTERVAL display_duration HOUR)
         ) STORED
@@ -53,7 +55,7 @@ async function initializeDatabase() {
     // 插入默认管理员账号 (密码: admin123)
     await connection.execute(`
       INSERT IGNORE INTO admin (username, password) 
-      VALUES ('admin', '$2b$10$QJ1sfn3QJZ3wH6QZJZJZJO0eQJZJZJZJZJZJZJZJZJZJZJZJZJ')
+      VALUES ('admin', '$2b$10$QJ1sfn3QJZ3wH6QZJZJZJO0eQJZJZJZJZJZJZJZJZJZJZJZJ')
     `);
     
     console.log('数据库表结构初始化完成');
@@ -95,12 +97,38 @@ const reverseMapAreaValue = (area) => {
   return areaMap[area] || area;
 };
 
-// 测试路由
+// 1. 测试路由
 app.get('/api/test', (req, res) => {
   res.json({ code: 200, message: '服务器正常运行' });
 });
 
-// 管理员登录
+// 2. 获取服务器当前UTC+8时间（核心修复：返回正确的UTC+8时间戳）
+app.get('/api/ads/current-time', async (req, res) => {
+  try {
+    // 关键修复：通过数据库直接获取UTC+8时间戳（避免JavaScript时区转换问题）
+    const [rows] = await pool.execute(`
+      SELECT UNIX_TIMESTAMP(CONVERT_TZ(NOW(), '+00:00', '+08:00')) * 1000 AS timestamp
+    `);
+    const serverTime = rows[0].timestamp; // 毫秒级UTC+8时间戳
+    
+    // 生成带UTC+8时区标记的时间格式
+    const utc8Date = new Date(serverTime);
+    const utc8Datetime = utc8Date.toISOString().replace('Z', '+08:00');
+    
+    res.json({
+      code: 200,
+      data: {
+        timestamp: serverTime, // 确保是UTC+8时间戳
+        datetime: utc8Datetime // 明确标记为UTC+8
+      }
+    });
+  } catch (error) {
+    console.error('获取服务器时间失败:', error);
+    res.status(500).json({ code: 500, error: '获取服务器时间失败' });
+  }
+});
+
+// 3. 管理员登录
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -110,8 +138,8 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(401).json({ code: 401, error: '用户名或密码错误' });
     }
     
-    // 这里简化处理，实际项目中应使用bcrypt等工具验证密码
-    if (password === 'admin123') { // 仅为示例，实际需加密验证
+    // 简化验证（实际项目需用bcrypt）
+    if (password === 'admin123') {
       res.json({ code: 200, message: '登录成功', token: 'admin_token' });
     } else {
       res.status(401).json({ code: 401, error: '用户名或密码错误' });
@@ -122,9 +150,7 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-// 广告相关API
-
-// 1. 获取广告列表（支持分页和区域筛选）
+// 4. 获取广告列表
 app.get('/api/ads', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -153,10 +179,13 @@ app.get('/api/ads', async (req, res) => {
     // 查询列表
     const [ads] = await pool.execute(listQuery, listParams);
     
-    // 转换区域值为前端需要的格式
+    // 转换区域值并格式化时间
     const formattedAds = ads.map(ad => ({
       ...ad,
-      area: reverseMapAreaValue(ad.area)
+      area: reverseMapAreaValue(ad.area),
+      // 确保时间字段返回UTC+8字符串格式
+      open_time: ad.open_time.toISOString().slice(0, 19).replace('T', ' '),
+      expire_time: ad.expire_time.toISOString().slice(0, 19).replace('T', ' ')
     }));
     
     res.json({
@@ -177,7 +206,7 @@ app.get('/api/ads', async (req, res) => {
   }
 });
 
-// 2. 获取单个广告详情
+// 5. 获取单个广告详情
 app.get('/api/ads/:id', async (req, res) => {
   try {
     const id = req.params.id;
@@ -187,25 +216,28 @@ app.get('/api/ads/:id', async (req, res) => {
       return res.status(404).json({ code: 404, error: '广告不存在' });
     }
     
-    // 转换区域值
-    const ad = {
-      ...rows[0],
-      area: reverseMapAreaValue(rows[0].area)
-    };
-    
-    res.json({ code: 200, data: ad });
+    const ad = rows[0];
+    res.json({ 
+      code: 200, 
+      data: {
+        ...ad,
+        area: reverseMapAreaValue(ad.area),
+        open_time: ad.open_time.toISOString().slice(0, 19).replace('T', ' '),
+        expire_time: ad.expire_time.toISOString().slice(0, 19).replace('T', ' ')
+      } 
+    });
   } catch (error) {
     console.error('获取广告详情失败:', error);
     res.status(500).json({ code: 500, error: '获取广告详情失败' });
   }
 });
 
-// 3. 创建新广告
+// 6. 创建新广告（增强时间验证）
 app.post('/api/ads', async (req, res) => {
   try {
     const {
       serverName,
-      openTime,
+      openTime, // 前端传递的是UTC+8时间戳（毫秒）
       feature = '',
       expRate = '',
       version = '',
@@ -218,8 +250,25 @@ app.post('/api/ads', async (req, res) => {
     if (!serverName || !openTime) {
       return res.status(400).json({ code: 400, error: '服务器名和开机时间为必填项' });
     }
+
+    // 后端增强验证：通过数据库获取当前UTC+8时间进行对比
+    const [timeRows] = await pool.execute(`
+  SELECT UNIX_TIMESTAMP(CONVERT_TZ(NOW(), '+00:00', '+08:00')) * 1000 AS \`current_time\`
+`);
+    const currentTime = timeRows[0].current_time; // 数据库UTC+8时间戳
     
-    // 转换区域值
+    // 允许1分钟误差
+    if (openTime <= currentTime - 60 * 1000) {
+      return res.status(400).json({ 
+        code: 400, 
+        error: '开机时间不能早于当前时间，请重新设置',
+        debug: `当前时间: ${new Date(currentTime).toLocaleString()}, 提交时间: ${new Date(openTime).toLocaleString()}`
+      });
+    }
+    
+    // 转换时间戳为UTC+8的DATETIME格式
+    const openTimeDate = new Date(openTime);
+    const openTimeStr = openTimeDate.toISOString().slice(0, 19).replace('T', ' ');
     const mappedArea = mapAreaValue(adArea);
     
     const [result] = await pool.execute(
@@ -227,7 +276,7 @@ app.post('/api/ads', async (req, res) => {
         server_name, open_time, feature, exp_rate, version, 
         homepage, display_duration, area
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [serverName, openTime, feature, expRate, version, homepage, displayDuration, mappedArea]
+      [serverName, openTimeStr, feature, expRate, version, homepage, displayDuration, mappedArea]
     );
     
     res.status(201).json({
@@ -241,13 +290,13 @@ app.post('/api/ads', async (req, res) => {
   }
 });
 
-// 4. 更新广告
+// 7. 更新广告
 app.put('/api/ads/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const {
       serverName,
-      openTime,
+      openTime, // UTC+8时间戳（毫秒）
       feature = '',
       expRate = '',
       version = '',
@@ -260,14 +309,28 @@ app.put('/api/ads/:id', async (req, res) => {
     if (!serverName || !openTime) {
       return res.status(400).json({ code: 400, error: '服务器名和开机时间为必填项' });
     }
+
+    // 后端验证：通过数据库获取当前UTC+8时间
+    const [timeRows] = await pool.execute(`
+      SELECT UNIX_TIMESTAMP(CONVERT_TZ(NOW(), '+00:00', '+08:00')) * 1000 AS current_time
+    `);
+    const currentTime = timeRows[0].current_time;
     
-    // 先检查广告是否存在
+    if (openTime <= currentTime - 60 * 1000) {
+      return res.status(400).json({ 
+        code: 400, 
+        error: '开机时间不能早于当前时间，请重新设置' 
+      });
+    }
+    
+    // 检查广告是否存在
     const [rows] = await pool.execute('SELECT * FROM ads WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ code: 404, error: '广告不存在' });
     }
     
-    // 转换区域值
+    // 转换时间戳为UTC+8的DATETIME格式
+    const openTimeStr = new Date(openTime).toISOString().slice(0, 19).replace('T', ' ');
     const mappedArea = mapAreaValue(adArea);
     
     // 更新广告
@@ -276,7 +339,7 @@ app.put('/api/ads/:id', async (req, res) => {
         server_name = ?, open_time = ?, feature = ?, exp_rate = ?, 
         version = ?, homepage = ?, display_duration = ?, area = ?
        WHERE id = ?`,
-      [serverName, openTime, feature, expRate, version, homepage, displayDuration, mappedArea, id]
+      [serverName, openTimeStr, feature, expRate, version, homepage, displayDuration, mappedArea, id]
     );
     
     res.json({ code: 200, message: '广告更新成功' });
@@ -286,12 +349,12 @@ app.put('/api/ads/:id', async (req, res) => {
   }
 });
 
-// 5. 删除单个广告
+// 8. 删除单个广告
 app.delete('/api/ads/:id', async (req, res) => {
   try {
     const id = req.params.id;
     
-    // 先检查广告是否存在
+    // 检查广告是否存在
     const [rows] = await pool.execute('SELECT * FROM ads WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ code: 404, error: '广告不存在' });
@@ -307,7 +370,7 @@ app.delete('/api/ads/:id', async (req, res) => {
   }
 });
 
-// 6. 批量删除广告
+// 9. 批量删除广告
 app.post('/api/ads/batch-delete', async (req, res) => {
   try {
     const { ids } = req.body;
@@ -327,7 +390,7 @@ app.post('/api/ads/batch-delete', async (req, res) => {
   }
 });
 
-// 7. 单个广告续期 - 修复版
+// 10. 单个广告续期（基于服务器时间）
 app.post('/api/ads/:id/renew', async (req, res) => {
   try {
     const id = req.params.id;
@@ -344,7 +407,7 @@ app.post('/api/ads/:id/renew', async (req, res) => {
       return res.status(404).json({ code: 404, error: '广告不存在' });
     }
     
-    // 修复续期逻辑：只增加展示时长，不调整开机时间
+    // 续期逻辑：累加展示时长
     await pool.execute(
       `UPDATE ads SET 
         display_duration = display_duration + ?
@@ -359,7 +422,7 @@ app.post('/api/ads/:id/renew', async (req, res) => {
   }
 });
 
-// 8. 批量续期广告 - 修复版
+// 11. 批量续期广告
 app.post('/api/ads/batch-renew', async (req, res) => {
   try {
     const { ids, displayDuration } = req.body;
@@ -370,7 +433,6 @@ app.post('/api/ads/batch-renew', async (req, res) => {
     
     // 构建参数化查询
     const placeholders = ids.map(() => '?').join(',');
-    // 修复续期逻辑：只增加展示时长，不调整开机时间
     await pool.execute(
       `UPDATE ads SET 
         display_duration = display_duration + ?
@@ -388,15 +450,5 @@ app.post('/api/ads/batch-renew', async (req, res) => {
 // 启动服务器
 app.listen(port, () => {
   console.log(`服务器运行在 http://localhost:${port}`);
-  console.log('可用API:');
-  console.log('GET    /api/test               - 测试服务器连接');
-  console.log('POST   /api/admin/login        - 管理员登录');
-  console.log('GET    /api/ads                - 获取广告列表');
-  console.log('GET    /api/ads/:id            - 获取单个广告详情');
-  console.log('POST   /api/ads                - 创建新广告');
-  console.log('PUT    /api/ads/:id            - 更新广告');
-  console.log('DELETE /api/ads/:id            - 删除单个广告');
-  console.log('POST   /api/ads/batch-delete   - 批量删除广告');
-  console.log('POST   /api/ads/:id/renew      - 单个广告续期');
-  console.log('POST   /api/ads/batch-renew    - 批量续期广告');
+  console.log('时间配置: 已强制使用UTC+8时区');
 });

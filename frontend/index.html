@@ -146,17 +146,22 @@
     
     .full-table th,
     .full-table td {
-      padding: 0 8px;
+      padding: 5px 8px; /* 增加内边距 */
       text-align: center;
       border: 1px solid #ddd;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
       font-family: "SimSun", serif !important;
       font-size: 12px !important;
       font-weight: normal !important;
-      height: 25px;
-      line-height: 25px;
+      line-height: 1.5; /* 调整行高 */
+    }
+    
+    /* 游戏版本特色介绍列特殊样式 - 允许换行 */
+    .full-table td.col-42 {
+      white-space: normal; /* 允许文本换行 */
+      height: auto; /* 自动调整高度 */
+      text-align: left; /* 左对齐便于阅读 */
     }
     
     /* 表头样式 */
@@ -164,6 +169,7 @@
       background: url(../images1/qq.jpg);
       color: #A84200;
       font-weight: bold !important;
+      white-space: nowrap; /* 表头不换行 */
     }
     
     /* 行背景色和鼠标悬停效果 */
@@ -200,16 +206,26 @@
       font-weight: normal !important;
     }
     
-    .tag {
-      display: inline-block;
-      padding: 0 3px;
-      margin: 0 2px;
-      background-color: #FFFFCC;
-      border: 1px dashed #FFCC66;
-      font-size: 12px !important;
+    /* 移除标签美化效果 */
+    .feature-text {
+      color: #FF0000 !important; /* 使用品牌强力推荐的红色作为主要颜色 */
       font-family: "SimSun", serif !important;
+      font-size: 12px !important;
       font-weight: normal !important;
     }
+    
+    /* 推荐标签样式 - 移除加粗，根据区域设置不同颜色 */
+    .recommendation-tag {
+      margin-left: 5px;
+      font-size: 12px !important;
+      font-weight: normal !important; /* 确保不加粗 */
+    }
+    
+    /* 各区域推荐标签颜色 */
+    .white-area .recommendation-tag { color: #000000; } /* 白区黑色 */
+    .orange-area .recommendation-tag { color: #FF9900; } /* 橙区橙色 */
+    .green-area .recommendation-tag { color: #009966; } /* 绿区青色/绿色 */
+    .top-yellow .recommendation-tag { color: #FF0000; } /* 黄区红色 */
     
     .bottom-banner {
       background-color: #FFFFFF;
@@ -309,6 +325,14 @@
   <script>
     const API_BASE_URL = 'http://localhost:3000/api';
     let allAds = [];
+    
+    // 定义各区域的推荐文本
+    const AREA_RECOMMEND_TEXTS = {
+      'top_yellow': '品牌强力推荐',
+      'white_area': '套白强力推荐',
+      'orange_area': '套黄强力推荐',
+      'green_area': '套青强力推荐'
+    };
 
     document.addEventListener('DOMContentLoaded', () => {
       loadAds();
@@ -373,13 +397,21 @@
         }
       });
 
-      renderFullAreaAds('top-yellow-list', adsByArea.top_yellow);
-      renderFullAreaAds('white-area-list', adsByArea.white_area);
-      renderFullAreaAds('orange-area-list', adsByArea.orange_area);
-      renderFullAreaAds('green-area-list', adsByArea.green_area);
+      // 为所有区域添加推荐标记
+      Object.keys(adsByArea).forEach(area => {
+        adsByArea[area] = adsByArea[area].map(ad => ({
+          ...ad,
+          isRecommended: true // 标记为推荐广告
+        }));
+      });
+
+      renderFullAreaAds('top-yellow-list', adsByArea.top_yellow, 'top_yellow');
+      renderFullAreaAds('white-area-list', adsByArea.white_area, 'white_area');
+      renderFullAreaAds('orange-area-list', adsByArea.orange_area, 'orange_area');
+      renderFullAreaAds('green-area-list', adsByArea.green_area, 'green_area');
     }
 
-    function renderFullAreaAds(areaId, ads) {
+    function renderFullAreaAds(areaId, ads, areaType) {
       const tbody = document.getElementById(areaId);
       
       if (!tbody) {
@@ -398,14 +430,18 @@
         return dateB - dateA;
       });
       
+      // 获取当前区域的推荐文本
+      const recommendText = AREA_RECOMMEND_TEXTS[areaType] || '强力推荐';
+      
       tbody.innerHTML = ads.map(ad => {
-        let featureHtml = ad.feature || '';
-        if (typeof featureHtml === 'string') {
-          featureHtml = featureHtml.replace(/【([^】]+)】/g, (match, text) => {
-            const tagColor = ad.tagColor || '#000'; 
-            return `<span class="tag" style="color: ${tagColor}">【${text}】</span>`;
-          });
-        }
+        // 移除特色介绍的所有美化效果，保持原始文本
+        const featureHtml = `<span class="feature-text">${ad.feature || ''}</span>`;
+
+        // 格式化时间，添加推荐标签
+        const formattedTime = formatDateTime(ad.open_time);
+        const timeHtml = ad.isRecommended 
+          ? `${formattedTime}<span class="recommendation-tag">${recommendText}</span>`
+          : formattedTime;
 
         return `
           <tr>
@@ -415,7 +451,7 @@
               </span>
             </td>
             <td class="col-15" style="color: ${ad.timeColor || '#000'}">
-              ${formatDateTime(ad.open_time)}
+              ${timeHtml}
             </td>
             <td class="col-42">${featureHtml}</td>
             <td class="col-8" style="color: ${ad.expColor || '#000'}">${ad.exp_rate || '-'}</td>
@@ -432,6 +468,7 @@
       }).join('');
     }
 
+    // 日期格式化函数，只显示月和日
     function formatDateTime(dateString) {
       if (!dateString || typeof dateString !== 'string') return '未知时间';
       try {
@@ -439,20 +476,15 @@
         if (isNaN(date.getTime())) {
           return dateString;
         }
-        return date.toLocaleString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+        // 只显示月和日，格式如：8月14日
+        return `${date.getMonth() + 1}月${date.getDate()}日`;
       } catch (e) {
         console.error('日期格式化错误:', e);
         return dateString;
       }
     }
 
-    // 模拟数据加载
+    // 模拟数据加载 - 添加了完整的特色介绍示例
     function loadMockData() {
       const now = new Date();
       const mockData = {
@@ -460,60 +492,82 @@
           {
             server_name: "奇迹1区",
             open_time: now.toISOString(),
-            feature: "【新开服】【高爆率】【长久稳定】",
+            feature: "▄【10/11/12】▄【纯正S6老品牌新服】▄【不售任何装备】▄【商人月入过万】▄",
             exp_rate: "10倍",
             version: "经典版",
             homepage: "#",
             serverNameColor: "#000080",
-            tagColor: "#FF0000"
+            isRecommended: true
           },
           {
             server_name: "奇迹2区",
             open_time: new Date(now.getTime() - 3600000).toISOString(),
-            feature: "【人气火爆】【福利多】",
+            feature: "【人气火爆】【福利多】【全新玩法】【全天活动】",
             exp_rate: "5倍",
             version: "怀旧版",
-            homepage: "#"
+            homepage: "#",
+            isRecommended: true
           }
         ],
         'white_area': [
           {
             server_name: "奇迹3区",
             open_time: new Date(now.getTime() - 7200000).toISOString(),
-            feature: "【新区】【活动多】",
+            feature: "▄【新区开放】▄【多重福利】▄【公平竞技】▄【长期稳定】▄",
             exp_rate: "8倍",
             version: "加强版",
-            homepage: "#"
+            homepage: "#",
+            isRecommended: true
+          },
+          {
+            server_name: "奇迹6区",
+            open_time: new Date(now.getTime() - 1800000).toISOString(),
+            feature: "【独家玩法】【全新地图】【装备靠打】【自由交易】",
+            exp_rate: "6倍",
+            version: "革新版",
+            homepage: "#",
+            isRecommended: true
           }
         ],
         'orange_area': [
           {
-            server_name: "奇迹4区",  // 这个会被过滤掉，因为设置了过期时间
+            server_name: "奇迹4区",
             open_time: new Date(now.getTime() - 10800000).toISOString(),
-            expire_time: new Date(now.getTime() - 3600000).toISOString(),
-            feature: "【独家】【稳定运营】",
+            feature: "▄【独家版本】▄【稳定运营】▄【玩家至上】▄【无套路】▄",
             exp_rate: "15倍",
             version: "变态版",
-            homepage: "#"
+            homepage: "#",
+            isRecommended: true
           }
         ],
         'green_area': [
           {
             server_name: "奇迹5区",
             open_time: new Date(now.getTime() - 14400000).toISOString(),
-            feature: "【公益】【无套路】",
+            feature: "【公益服务器】【无任何收费】【公平公正】【长期开放】",
             exp_rate: "3倍",
             version: "纯净版",
-            homepage: "#"
+            homepage: "#",
+            isRecommended: true
+          },
+          {
+            server_name: "奇迹7区",
+            open_time: new Date(now.getTime() - 21600000).toISOString(),
+            feature: "▄【低消费】▄【高回报】▄【新手扶持】▄【每日活动】▄",
+            exp_rate: "4倍",
+            version: "公益服",
+            homepage: "#",
+            isRecommended: true
           }
         ]
       };
       
-      renderFullAreaAds('top-yellow-list', mockData.top_yellow);
-      renderFullAreaAds('white-area-list', mockData.white_area);
-      renderFullAreaAds('orange-area-list', mockData.orange_area);
-      renderFullAreaAds('green-area-list', mockData.green_area);
+      renderFullAreaAds('top-yellow-list', mockData.top_yellow, 'top_yellow');
+      renderFullAreaAds('white-area-list', mockData.white_area, 'white_area');
+      renderFullAreaAds('orange-area-list', mockData.orange_area, 'orange_area');
+      renderFullAreaAds('green-area-list', mockData.green_area, 'green_area');
     }
   </script>
 </body>
 </html>
+    
