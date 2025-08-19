@@ -725,7 +725,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         // 添加认证信息（根据您的实际认证方式）
-                        'Authorization': 'Bearer ' + getAuthToken()
+                        //'Authorization': 'Bearer ' + getAuthToken()
                     },
                     cache: forceRefresh ? 'no-cache' : 'default'
                 });
@@ -737,13 +737,17 @@
                 
                 // 接收来自数据库的真实数据
                 allAds = await response.json();
-                
+                console.log('后端返回的原始数据:', allAds); // 添加此行
                 // 确保时间戳是数字类型（已转换为UTC+8时间戳）
-                allAds = allAds.map(ad => ({
-                    ...ad,
-                    originalOpenTime: Number(ad.originalOpenTime),
-                    originalExpireTime: Number(ad.originalExpireTime)
-                }));
+                allAds = allAds.map(ad => {
+    console.log('转换前 originalOpenTime:', ad.originalOpenTime);
+    console.log('转换前 originalExpireTime:', ad.originalExpireTime);
+    return {
+       ...ad,
+        originalOpenTime: Number(ad.originalOpenTime),
+        originalExpireTime: Number(ad.originalExpireTime)
+    };
+});
                 
                 // 渲染表格
                 renderAdTable(allAds);
@@ -771,7 +775,7 @@
                 return;
             }
             
-            // 新增：明确获取并验证区域值
+            // 明确获取并验证区域值
             const areaValue = document.getElementById('area').value;
             if (!areaValue || areaValue.trim() === '') {
                 alert('请选择区域');
@@ -829,7 +833,7 @@
                     exp_rate: document.getElementById('expRate').value.trim(),
                     version: document.getElementById('version').value.trim(),
                     homepage: document.getElementById('homepage').value.trim(),
-                    area: areaValue, // 使用已验证的区域值
+                    area: areaValue, // 强制使用验证后的区域值
                     enable_reminder: enableReminder,
                     reminder_time: enableReminder ? reminderTime : null,
                     created_at: new Date(getCurrentServerTime()).toISOString(),
@@ -853,7 +857,7 @@
                 return;
             }
             
-            // 修复问题1：加强区域检查逻辑
+            // 加强区域检查逻辑
             if (!adsData[0].area || adsData[0].area.trim() === '') {
                 alert('请选择有效的区域');
                 goToPrevStep();
@@ -1083,11 +1087,21 @@
             const areaFilter = document.getElementById('areaFilter').value;
             const statusFilter = document.getElementById('statusFilter').value;
             
+            // 调试信息：输出当前筛选参数
+            console.log('筛选参数:', {
+                searchText,
+                areaFilter,
+                statusFilter
+            });
+            
             try {
                 // 构建查询参数
                 const params = new URLSearchParams();
                 if (searchText) params.append('search', searchText);
-                if (areaFilter) params.append('area', areaFilter);
+                // 确保区域筛选参数正确传递
+                if (areaFilter && areaFilter.trim() !== '') {
+                    params.append('area', areaFilter.trim());
+                }
                 if (statusFilter) params.append('status', statusFilter);
                 
                 // 调用服务器筛选API，该API应在数据库中执行筛选查询
@@ -1104,6 +1118,7 @@
                 
                 // 获取筛选后的数据库结果
                 const filteredAds = await response.json();
+                console.log('筛选结果数量:', filteredAds.length);
                 renderAdTable(filteredAds);
                 
             } catch (error) {
@@ -1589,7 +1604,7 @@
             // 填充表单数据
             document.getElementById('serverName').value = ad.server_name.replace(/-(\d+)$/, '');
             
-            // 修复问题3：确保区域值被正确设置
+            // 确保区域值被正确设置
             if (ad.area) {
                 document.getElementById('area').value = ad.area;
             } else {
@@ -1636,121 +1651,4 @@
                 editAd(adId);
                 return;
             }
-            
-            // 重置表单
-            document.getElementById('modalTitle').innerHTML = `<i class="fas fa-plus"></i> 新增广告`;
-            document.getElementById('adId').value = '';
-            document.getElementById('serverName').value = '';
-            document.getElementById('area').value = '';
-            document.getElementById('batchCount').value = 1;
-            document.getElementById('timeOffset').value = 60;
-            document.getElementById('timeOffsetGroup').style.display = 'none';
-            
-            // 设置默认时间（当前时间+1小时 到 当前时间+25小时）
-            const now = new Date(getCurrentServerTime());
-            const defaultOpenTime = new Date(now.getTime() + 60 * 60 * 1000);
-            const defaultExpireTime = new Date(now.getTime() + 25 * 60 * 60 * 1000);
-            
-            document.getElementById('openTime').value = formatDateTimeForInput(defaultOpenTime.getTime());
-            document.getElementById('expireTime').value = formatDateTimeForInput(defaultExpireTime.getTime());
-            
-            const openLocalTime = new Date(convertUTC8ToLocal(document.getElementById('openTime').value)).toLocaleString();
-            const expireLocalTime = new Date(convertUTC8ToLocal(document.getElementById('expireTime').value)).toLocaleString();
-            document.getElementById('openTimeLocal').textContent = openLocalTime;
-            document.getElementById('expireTimeLocal').textContent = expireLocalTime;
-            
-            document.getElementById('feature').value = '';
-            document.getElementById('featureLength').textContent = '0';
-            document.getElementById('expRate').value = '';
-            document.getElementById('version').value = '';
-            document.getElementById('homepage').value = '';
-            document.getElementById('enableReminder').checked = false;
-            document.getElementById('reminderTime').value = 24;
-            document.getElementById('reminderTimeGroup').style.display = 'none';
-            document.getElementById('confirmCheck').checked = false;
-            
-            // 重置步骤
-            currentStep = 1;
-            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.step-indicator-item').forEach(el => el.classList.remove('active'));
-            document.querySelector(`.step-content[data-step="1"]`).classList.add('active');
-            document.querySelector(`.step-indicator-item[data-step="1"]`).classList.add('active');
-            updateStepButtons();
-            
-            // 显示模态框
-            document.getElementById('adModal').classList.add('active');
-        }
-
-        // 更新服务器时间显示
-        function updateServerTimeDisplay() {
-            const now = new Date(getCurrentServerTime());
-            document.getElementById('serverTimeDisplay').textContent = now.toLocaleString() + 
-                ' (' + now.getFullYear() + '-' + 
-                String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                String(now.getDate()).padStart(2, '0') + ' ' + 
-                String(now.getHours()).padStart(2, '0') + ':' + 
-                String(now.getMinutes()).padStart(2, '0') + ':' + 
-                String(now.getSeconds()).padStart(2, '0') + ')';
-        }
-
-        // 更新过期时间预览
-        function updateExpireTimePreview() {
-            const openTimeStr = document.getElementById('openTime').value;
-            if (!openTimeStr) return;
-            
-            const openTime = new Date(openTimeStr);
-            const defaultExpireTime = new Date(openTime.getTime() + 24 * 60 * 60 * 1000); // 默认24小时后
-            
-            if (!document.getElementById('expireTime').value) {
-                document.getElementById('expireTime').value = formatDateTimeForInput(defaultExpireTime.getTime());
-                
-                const expireLocalTime = new Date(convertUTC8ToLocal(document.getElementById('expireTime').value)).toLocaleString();
-                document.getElementById('expireTimeLocal').textContent = expireLocalTime;
-            }
-        }
-
-        // 关闭模态框
-        function closeModal() {
-            document.getElementById('adModal').classList.remove('active');
-        }
-
-        // 显示成功消息
-        function showSuccessMessage(title, message) {
-            document.getElementById('notificationTitle').textContent = title;
-            document.getElementById('notificationMessage').textContent = message;
-            const notification = document.getElementById('successNotification');
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-
-        // 获取区域文本
-        function getAreaText(areaCode) {
-            const areaMap = {
-                'top_yellow': '黄色区域',
-                'white_area': '白色区域',
-                'orange_area': '橙色区域',
-                'green_area': '绿色区域'
-            };
-            return areaMap[areaCode] || areaCode;
-        }
-
-        // 启动倒计时更新
-        function startCountdownUpdates() {
-            if (countdownInterval) clearInterval(countdownInterval);
-            
-            countdownInterval = setInterval(() => {
-                allAds.forEach(ad => {
-                    const element = document.getElementById(`countdown-${ad.id}`);
-                    if (element) {
-                        element.textContent = getCountdownText(ad);
-                        element.className = getCountdownClass(ad);
-                    }
-                });
-            }, 60000); // 每分钟更新一次
-        }
-    </script>
-</body>
-</html>
+        }    

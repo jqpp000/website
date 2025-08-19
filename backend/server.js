@@ -1,9 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken'); // 新增JWT依赖
 const { createPool } = require('mysql2/promise');
 const app = express();
 const port = 3000;
+
+// JWT配置（实际生产环境建议用环境变量存储密钥）
+const JWT_SECRET = 'your-secure-jwt-secret-key'; // 替换为随机安全字符串
+const JWT_EXPIRES_IN = '24h';
 
 // 数据库连接配置（强化时区设置）
 const pool = createPool({
@@ -14,20 +19,24 @@ const pool = createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  // 关键：强制连接使用UTC+8
-  timezone: '+08:00',
-  // 额外：指定日期格式，避免解析问题
-  dateStrings: true
+  timezone: '+08:00', // 强制UTC+8时区
+  dateStrings: true // 日期返回字符串格式，避免解析问题
 });
 
-// 工具函数：确保时间转换为UTC+8
+// 工具函数：将时间转换为UTC+8格式（修复核心时间转换问题）
 const formatToUTC8 = (date) => {
-  // 创建UTC+8时间对象
-  const utc8Offset = 8 * 60 * 60 * 1000; // 8小时毫秒数
-  const utc8Date = new Date(new Date(date).getTime() + utc8Offset);
-  
-  // 格式化为数据库兼容的字符串（YYYY-MM-DD HH:MM:SS）
-  return utc8Date.toISOString().slice(0, 19).replace('T', ' ');
+  const dateObj = new Date(date);
+  // 直接转换为Asia/Shanghai时区的YYYY-MM-DD HH:MM:SS格式
+  return dateObj.toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
 };
 
 // 初始化数据库表结构
@@ -55,7 +64,7 @@ async function initializeDatabase() {
       )
     `);
 
-    // 创建管理员表（修复语法错误：移除重复的DEFAULT）
+    // 创建管理员表
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS admin (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -65,7 +74,7 @@ async function initializeDatabase() {
       )
     `);
     
-    // 插入默认管理员账号
+    // 插入默认管理员账号（密码：admin123）
     const hashedPassword = await bcrypt.hash('admin123', 10);
     await connection.execute(`
       INSERT IGNORE INTO admin (username, password) 
@@ -77,7 +86,7 @@ async function initializeDatabase() {
     console.error('数据库初始化失败:', error);
   } finally {
     if (connection) {
-      connection.release();
+      connection.release(); // 确保连接释放
     }
   }
 }
@@ -92,7 +101,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// 工具函数：将时间转换为时间戳
+// 工具函数：将数据库时间转换为时间戳
 const datetimeToTimestamp = (datetime) => {
   return new Date(datetime).getTime();
 };
@@ -112,15 +121,18 @@ app.get('/api/time', async (req, res) => {
       currentTime: dbTime.toISOString(),
       timestamp: dbTime.getTime(),
       timezone: 'UTC+8',
-      db_raw_time: rows[0].current_time // 显示数据库原始时间
+      db_raw_time: rows[0].current_time
     });
   } catch (error) {
     console.error('获取服务器时间失败:', error);
-    res.status(500).json({ error: '获取服务器时间失败' });
+    res.status(500).json({ 
+      error: '获取服务器时间失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
-// 3. 管理员登录
+// 3. 管理员登录（修复令牌安全问题）
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -136,13 +148,22 @@ app.post('/api/admin/login', async (req, res) => {
     
     const isPasswordValid = await bcrypt.compare(password, rows[0].password);
     if (isPasswordValid) {
-      res.json({ message: '登录成功', token: 'admin_token' });
+      // 生成JWT令牌
+      const token = jwt.sign(
+        { username: rows[0].username, id: rows[0].id },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+      );
+      res.json({ message: '登录成功', token });
     } else {
       res.status(401).json({ error: '用户名或密码错误' });
     }
   } catch (error) {
     console.error('登录失败:', error);
-    res.status(500).json({ error: '登录失败' });
+    res.status(500).json({ 
+      error: '登录失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -211,15 +232,20 @@ app.get('/api/ads', async (req, res) => {
     res.json(ads);
   } catch (error) {
     console.error('获取广告列表失败:', error);
-    res.status(500).json({ error: '获取广告列表失败' });
+    res.status(500).json({ 
+      error: '获取广告列表失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
-// 5. 新增广告（批量）- 使用UTC+8时间格式化
+// 5. 新增广告（批量）- 添加area验证
 app.post('/api/ads/batch', async (req, res) => {
   let connection;
   try {
     const ads = req.body;
+    const validAreas = ['top_yellow', 'white_area', 'orange_area', 'green_area']; // 有效区域值
+    
     if (!Array.isArray(ads) || ads.length === 0) {
       return res.status(400).json({ error: '请提供有效的广告数据' });
     }
@@ -229,9 +255,18 @@ app.post('/api/ads/batch', async (req, res) => {
     
     const results = [];
     for (const ad of ads) {
+      // 验证必填字段
       if (!ad.server_name || !ad.area || !ad.open_time || !ad.expire_time) {
         await connection.rollback();
-        return res.status(400).json({ error: '广告数据缺少必填字段' });
+        return res.status(400).json({ error: '广告数据缺少必填字段（服务器名、区域、开始/结束时间）' });
+      }
+      
+      // 验证区域值有效性
+      if (!validAreas.includes(ad.area)) {
+        await connection.rollback();
+        return res.status(400).json({ 
+          error: `无效的区域值: ${ad.area}，允许值：${validAreas.join(', ')}` 
+        });
       }
       
       const [result] = await connection.execute(`
@@ -243,8 +278,8 @@ app.post('/api/ads/batch', async (req, res) => {
       `, [
         ad.server_name,
         ad.area,
-        formatToUTC8(ad.open_time),  // 强制转为UTC+8
-        formatToUTC8(ad.expire_time),// 强制转为UTC+8
+        formatToUTC8(ad.open_time),  // 使用修复后的时间转换
+        formatToUTC8(ad.expire_time),// 使用修复后的时间转换
         ad.feature || '',
         ad.exp_rate || '',
         ad.version || '',
@@ -261,20 +296,32 @@ app.post('/api/ads/batch', async (req, res) => {
   } catch (error) {
     if (connection) await connection.rollback();
     console.error('新增广告失败:', error);
-    res.status(500).json({ error: '新增广告失败' });
+    res.status(500).json({ 
+      error: '新增广告失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   } finally {
     if (connection) connection.release();
   }
 });
 
-// 6. 更新广告 - 使用UTC+8时间格式化
+// 6. 更新广告 - 添加area验证
 app.put('/api/ads/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const ad = req.body;
+    const validAreas = ['top_yellow', 'white_area', 'orange_area', 'green_area']; // 有效区域值
     
+    // 验证必填字段
     if (!id || !ad.server_name || !ad.area || !ad.open_time || !ad.expire_time) {
-      return res.status(400).json({ error: '缺少必要的广告数据' });
+      return res.status(400).json({ error: '缺少必要的广告数据（服务器名、区域、开始/结束时间）' });
+    }
+    
+    // 验证区域值有效性
+    if (!validAreas.includes(ad.area)) {
+      return res.status(400).json({ 
+        error: `无效的区域值: ${ad.area}，允许值：${validAreas.join(', ')}` 
+      });
     }
     
     await pool.execute(`
@@ -286,8 +333,8 @@ app.put('/api/ads/:id', async (req, res) => {
     `, [
       ad.server_name,
       ad.area,
-      formatToUTC8(ad.open_time),  // 强制转为UTC+8
-      formatToUTC8(ad.expire_time),// 强制转为UTC+8
+      formatToUTC8(ad.open_time),  // 使用修复后的时间转换
+      formatToUTC8(ad.expire_time),// 使用修复后的时间转换
       ad.feature || '',
       ad.exp_rate || '',
       ad.version || '',
@@ -300,7 +347,10 @@ app.put('/api/ads/:id', async (req, res) => {
     res.json({ id, ...ad });
   } catch (error) {
     console.error('更新广告失败:', error);
-    res.status(500).json({ error: '更新广告失败' });
+    res.status(500).json({ 
+      error: '更新广告失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -321,7 +371,10 @@ app.delete('/api/ads/batch', async (req, res) => {
     });
   } catch (error) {
     console.error('批量删除失败:', error);
-    res.status(500).json({ error: '批量删除失败' });
+    res.status(500).json({ 
+      error: '批量删除失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -341,11 +394,14 @@ app.delete('/api/ads/:id', async (req, res) => {
     res.json({ success: true, message: '广告已删除' });
   } catch (error) {
     console.error('删除广告失败:', error);
-    res.status(500).json({ error: '删除广告失败' });
+    res.status(500).json({ 
+      error: '删除广告失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
-// 9. 广告续期 - 使用UTC+8时间格式化
+// 9. 广告续期
 app.post('/api/ads/:id/renew', async (req, res) => {
   try {
     const { id } = req.params;
@@ -355,6 +411,7 @@ app.post('/api/ads/:id/renew', async (req, res) => {
       return res.status(400).json({ error: '请提供广告ID和新的过期时间' });
     }
     
+    // 验证广告是否存在
     const [exists] = await pool.execute('SELECT id FROM ads WHERE id = ?', [id]);
     if (exists.length === 0) {
       return res.status(404).json({ error: '未找到该广告' });
@@ -365,21 +422,24 @@ app.post('/api/ads/:id/renew', async (req, res) => {
         expire_time = ?, updated_at = NOW()
       WHERE id = ?
     `, [
-      formatToUTC8(new_expire_time),  // 强制转为UTC+8
+      formatToUTC8(new_expire_time),  // 使用修复后的时间转换
       id
     ]);
     
     res.json({ success: true, message: '广告已续期' });
   } catch (error) {
     console.error('广告续期失败:', error);
-    res.status(500).json({ error: '广告续期失败' });
+    res.status(500).json({ 
+      error: '广告续期失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
-// 10. 时区验证接口 - 新增接口，用于验证数据库时区是否正确
+// 10. 时区验证接口
 app.get('/api/verify-timezone', async (req, res) => {
   try {
-    // 查询数据库服务器时区
+    // 查询数据库时区配置
     const [timezoneRows] = await pool.execute(
       'SELECT @@global.time_zone AS global_tz, @@session.time_zone AS session_tz'
     );
@@ -395,11 +455,14 @@ app.get('/api/verify-timezone', async (req, res) => {
       local_utc8_time: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
     });
   } catch (error) {
-    res.status(500).json({ error: '时区验证失败', details: error.message });
+    res.status(500).json({ 
+      error: '时区验证失败', 
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
-// 11. 批量续期广告 - 新增接口，用于前端前端前端批量续期调用
+// 11. 批量续期广告
 app.post('/api/ads/batch/renew', async (req, res) => {
   let connection;
   try {
@@ -418,7 +481,7 @@ app.post('/api/ads/batch/renew', async (req, res) => {
     const [timeRows] = await pool.execute('SELECT NOW() AS `current_time`');
     const currentTime = timeRows[0].current_time;
     
-    // 使用事务确保批量操作的原子性
+    // 使用事务确保批量操作原子性
     connection = await pool.getConnection();
     await connection.beginTransaction();
     
@@ -428,7 +491,7 @@ app.post('/api/ads/batch/renew', async (req, res) => {
       UPDATE ads 
       SET expire_time = IF(
         expire_time > NOW(),  -- 如果当前过期时间在未来
-        DATE_ADD(expire_time, INTERVAL ? HOUR),  -- 则在原时间基础上增加
+        DATE_ADD(expire_time, INTERVAL ? HOUR),  -- 原时间基础上增加
         DATE_ADD(NOW(), INTERVAL ? HOUR)  -- 否则从当前时间开始增加
       ),
       updated_at = NOW()
@@ -443,14 +506,16 @@ app.post('/api/ads/batch/renew', async (req, res) => {
       affectedRows: result.affectedRows
     });
   } catch (error) {
-    if (connection) await connection.rollback(); // 出错时回滚事务
+    if (connection) await connection.rollback();
     console.error('批量续期失败:', error);
-    res.status(500).json({ error: '批量续期失败' });
+    res.status(500).json({ 
+      error: '批量续期失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   } finally {
-    if (connection) connection.release(); // 确保连接释放
+    if (connection) connection.release();
   }
 });
-    
 
 // 启动服务器
 app.listen(port, () => {
