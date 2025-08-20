@@ -1,42 +1,68 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken'); // 新增JWT依赖
+const jwt = require('jsonwebtoken');
 const { createPool } = require('mysql2/promise');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// JWT配置（实际生产环境建议用环境变量存储密钥）
-const JWT_SECRET = 'your-secure-jwt-secret-key'; // 替换为随机安全字符串
+// 安全配置 - 从环境变量读取敏感信息
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-for-development-only'; // 生产环境必须通过环境变量设置
 const JWT_EXPIRES_IN = '24h';
 
-// 数据库连接配置（强化时区设置）
+// 数据库连接配置
 const pool = createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '', // 替换为你的数据库密码
-  database: 'game_ad_db',
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'game_ad_db',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
   timezone: '+08:00', // 强制UTC+8时区
-  dateStrings: true // 日期返回字符串格式，避免解析问题
+  dateStrings: true
 });
 
-// 工具函数：将时间转换为UTC+8格式（修复核心时间转换问题）
+// JWT验证中间件
+const authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({ error: '未提供有效的身份令牌' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error('JWT验证失败:', error.message);
+    return res.status(403).json({ error: '令牌无效或已过期' });
+  }
+};
+
+// 工具函数：将时间转换为UTC+8格式（修复版）
 const formatToUTC8 = (date) => {
   const dateObj = new Date(date);
-  // 直接转换为Asia/Shanghai时区的YYYY-MM-DD HH:MM:SS格式
-  return dateObj.toLocaleString('zh-CN', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  }).replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
+  
+  // 验证日期有效性
+  if (isNaN(dateObj.getTime())) {
+    throw new Error('无效的日期格式');
+  }
+  
+  // 手动构建YYYY-MM-DD HH:MM:SS格式
+  return [
+    dateObj.getFullYear(),
+    String(dateObj.getMonth() + 1).padStart(2, '0'),
+    String(dateObj.getDate()).padStart(2, '0')
+  ].join('-') + ' ' + [
+    String(dateObj.getHours()).padStart(2, '0'),
+    String(dateObj.getMinutes()).padStart(2, '0'),
+    String(dateObj.getSeconds()).padStart(2, '0')
+  ].join(':');
 };
 
 // 初始化数据库表结构
@@ -70,36 +96,73 @@ async function initializeDatabase() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_login TIMESTAMP NULL,
+        first_login BOOLEAN DEFAULT TRUE
       )
     `);
-    
-    // 插入默认管理员账号（密码：admin123）
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    await connection.execute(`
-      INSERT IGNORE INTO admin (username, password) 
-      VALUES ('admin', ?)
-    `, [hashedPassword]);
     
     console.log('数据库表结构初始化完成');
   } catch (error) {
     console.error('数据库初始化失败:', error);
   } finally {
     if (connection) {
-      connection.release(); // 确保连接释放
+      connection.release();
     }
   }
 }
 
-// 初始化数据库
-initializeDatabase();
+// 初始化管理员账号（单独函数，便于后续扩展）
+async function initializeAdminAccount() {
+  // 仅在开发环境自动创建默认管理员
+  if (process.env.NODE_ENV === 'development') {
+    let connection;
+    try {
+      connection = await pool.getConnection();
+      
+      // 检查是否已有管理员账号
+      const [rows] = await connection.execute('SELECT id FROM admin LIMIT 1');
+      
+      if (rows.length === 0) {
+        // 开发环境创建默认管理员（生产环境应手动创建）
+        const defaultPassword = 'admin123';
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        
+        await connection.execute(`
+          INSERT INTO admin (username, password) 
+          VALUES ('admin', ?)
+        `, [hashedPassword]);
+        
+        console.log('开发环境：已创建默认管理员账号 (username: admin, password: admin123)');
+        console.log('生产环境请手动创建管理员账号并删除默认账号');
+      }
+    } catch (error) {
+      console.error('管理员账号初始化失败:', error);
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
+  }
+}
+
+// 初始化数据库和管理员账号
+initializeDatabase().then(() => {
+  initializeAdminAccount();
+});
 
 // 中间件配置
 app.use(cors({
-  origin: ['http://localhost:5500', 'http://127.0.0.1:5500'],
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5500', 'http://127.0.0.1:5500'],
   credentials: true
 }));
 app.use(express.json());
+
+// 日志中间件
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 // 工具函数：将数据库时间转换为时间戳
 const datetimeToTimestamp = (datetime) => {
@@ -108,7 +171,7 @@ const datetimeToTimestamp = (datetime) => {
 
 // 1. 测试路由
 app.get('/api/test', (req, res) => {
-  res.json({ code: 200, message: '服务器正常运行' });
+  res.json({ code: 200, message: '服务器正常运行', timestamp: Date.now() });
 });
 
 // 2. 获取服务器当前时间（UTC+8）
@@ -132,10 +195,11 @@ app.get('/api/time', async (req, res) => {
   }
 });
 
-// 3. 管理员登录（修复令牌安全问题）
+// 3. 管理员登录
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+    
     if (!username || !password) {
       return res.status(400).json({ error: '请输入用户名和密码' });
     }
@@ -147,14 +211,26 @@ app.post('/api/admin/login', async (req, res) => {
     }
     
     const isPasswordValid = await bcrypt.compare(password, rows[0].password);
+    
     if (isPasswordValid) {
+      // 更新最后登录时间
+      await pool.execute(
+        'UPDATE admin SET last_login = NOW(), first_login = FALSE WHERE id = ?',
+        [rows[0].id]
+      );
+      
       // 生成JWT令牌
       const token = jwt.sign(
         { username: rows[0].username, id: rows[0].id },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
       );
-      res.json({ message: '登录成功', token });
+      
+      res.json({ 
+        message: '登录成功', 
+        token,
+        firstLogin: rows[0].first_login || false
+      });
     } else {
       res.status(401).json({ error: '用户名或密码错误' });
     }
@@ -167,8 +243,53 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-// 4. 获取广告列表
-app.get('/api/ads', async (req, res) => {
+// 4. 修改密码（新增）
+app.post('/api/admin/change-password', authenticateJWT, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const adminId = req.user.id;
+    
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: '请输入旧密码和新密码' });
+    }
+    
+    // 验证密码强度
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: '新密码长度不能少于8个字符' });
+    }
+    
+    // 获取当前管理员信息
+    const [rows] = await pool.execute('SELECT * FROM admin WHERE id = ?', [adminId]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: '管理员不存在' });
+    }
+    
+    // 验证旧密码
+    const isPasswordValid = await bcrypt.compare(oldPassword, rows[0].password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: '旧密码不正确' });
+    }
+    
+    // 加密新密码并更新
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.execute(
+      'UPDATE admin SET password = ?, first_login = FALSE WHERE id = ?',
+      [hashedPassword, adminId]
+    );
+    
+    res.json({ message: '密码修改成功，请重新登录' });
+  } catch (error) {
+    console.error('修改密码失败:', error);
+    res.status(500).json({ 
+      error: '修改密码失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// 5. 获取广告列表（需认证）
+app.get('/api/ads', authenticateJWT, async (req, res) => {
   try {
     const { search, area, status } = req.query;
     let query = `
@@ -239,15 +360,20 @@ app.get('/api/ads', async (req, res) => {
   }
 });
 
-// 5. 新增广告（批量）- 添加area验证
-app.post('/api/ads/batch', async (req, res) => {
+// 6. 新增广告（批量）
+app.post('/api/ads/batch', authenticateJWT, async (req, res) => {
   let connection;
   try {
     const ads = req.body;
-    const validAreas = ['top_yellow', 'white_area', 'orange_area', 'green_area']; // 有效区域值
+    const validAreas = ['top_yellow', 'white_area', 'orange_area', 'green_area'];
     
     if (!Array.isArray(ads) || ads.length === 0) {
       return res.status(400).json({ error: '请提供有效的广告数据' });
+    }
+    
+    // 限制批量操作数量，防止恶意请求
+    if (ads.length > 50) {
+      return res.status(400).json({ error: '批量操作数量不能超过50条' });
     }
     
     connection = await pool.getConnection();
@@ -261,6 +387,18 @@ app.post('/api/ads/batch', async (req, res) => {
         return res.status(400).json({ error: '广告数据缺少必填字段（服务器名、区域、开始/结束时间）' });
       }
       
+      // 验证服务器名
+      if (ad.server_name.length > 100) {
+        await connection.rollback();
+        return res.status(400).json({ error: '服务器名长度不能超过100个字符' });
+      }
+      
+      // 验证广告特性长度
+      if (ad.feature && ad.feature.length > 200) {
+        await connection.rollback();
+        return res.status(400).json({ error: '广告特性不能超过200个字符' });
+      }
+      
       // 验证区域值有效性
       if (!validAreas.includes(ad.area)) {
         await connection.rollback();
@@ -269,26 +407,52 @@ app.post('/api/ads/batch', async (req, res) => {
         });
       }
       
-      const [result] = await connection.execute(`
-        INSERT INTO ads (
-          server_name, area, open_time, expire_time, 
-          feature, exp_rate, version, homepage, 
-          enable_reminder, reminder_time
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        ad.server_name,
-        ad.area,
-        formatToUTC8(ad.open_time),  // 使用修复后的时间转换
-        formatToUTC8(ad.expire_time),// 使用修复后的时间转换
-        ad.feature || '',
-        ad.exp_rate || '',
-        ad.version || '',
-        ad.homepage || '',
-        ad.enable_reminder ? 1 : 0,
-        ad.reminder_time || null
-      ]);
+      // 验证时间有效性
+      const openTime = new Date(ad.open_time);
+      const expireTime = new Date(ad.expire_time);
+      const now = new Date();
       
-      results.push({ id: result.insertId, ...ad });
+      if (isNaN(openTime.getTime()) || isNaN(expireTime.getTime())) {
+        await connection.rollback();
+        return res.status(400).json({ error: '无效的时间格式' });
+      }
+      
+      if (openTime >= expireTime) {
+        await connection.rollback();
+        return res.status(400).json({ error: '开始时间不能晚于结束时间' });
+      }
+      
+      // 不能创建过期时间在当前时间之前的广告
+      if (expireTime <= now) {
+        await connection.rollback();
+        return res.status(400).json({ error: '结束时间不能早于当前时间' });
+      }
+      
+      try {
+        const [result] = await connection.execute(`
+          INSERT INTO ads (
+            server_name, area, open_time, expire_time, 
+            feature, exp_rate, version, homepage, 
+            enable_reminder, reminder_time
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          ad.server_name,
+          ad.area,
+          formatToUTC8(ad.open_time),
+          formatToUTC8(ad.expire_time),
+          ad.feature || '',
+          ad.exp_rate || '',
+          ad.version || '',
+          ad.homepage || '',
+          ad.enable_reminder ? 1 : 0,
+          ad.reminder_time || null
+        ]);
+        
+        results.push({ id: result.insertId, ...ad });
+      } catch (insertError) {
+        await connection.rollback();
+        throw insertError;
+      }
     }
     
     await connection.commit();
@@ -305,16 +469,31 @@ app.post('/api/ads/batch', async (req, res) => {
   }
 });
 
-// 6. 更新广告 - 添加area验证
-app.put('/api/ads/:id', async (req, res) => {
+// 7. 更新广告
+app.put('/api/ads/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
     const ad = req.body;
-    const validAreas = ['top_yellow', 'white_area', 'orange_area', 'green_area']; // 有效区域值
+    const validAreas = ['top_yellow', 'white_area', 'orange_area', 'green_area'];
+    
+    // 验证参数
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: '请提供有效的广告ID' });
+    }
     
     // 验证必填字段
-    if (!id || !ad.server_name || !ad.area || !ad.open_time || !ad.expire_time) {
+    if (!ad.server_name || !ad.area || !ad.open_time || !ad.expire_time) {
       return res.status(400).json({ error: '缺少必要的广告数据（服务器名、区域、开始/结束时间）' });
+    }
+    
+    // 验证服务器名
+    if (ad.server_name.length > 100) {
+      return res.status(400).json({ error: '服务器名长度不能超过100个字符' });
+    }
+    
+    // 验证广告特性长度
+    if (ad.feature && ad.feature.length > 200) {
+      return res.status(400).json({ error: '广告特性不能超过200个字符' });
     }
     
     // 验证区域值有效性
@@ -322,6 +501,24 @@ app.put('/api/ads/:id', async (req, res) => {
       return res.status(400).json({ 
         error: `无效的区域值: ${ad.area}，允许值：${validAreas.join(', ')}` 
       });
+    }
+    
+    // 验证时间有效性
+    const openTime = new Date(ad.open_time);
+    const expireTime = new Date(ad.expire_time);
+    
+    if (isNaN(openTime.getTime()) || isNaN(expireTime.getTime())) {
+      return res.status(400).json({ error: '无效的时间格式' });
+    }
+    
+    if (openTime >= expireTime) {
+      return res.status(400).json({ error: '开始时间不能晚于结束时间' });
+    }
+    
+    // 检查广告是否存在
+    const [exists] = await pool.execute('SELECT id FROM ads WHERE id = ?', [id]);
+    if (exists.length === 0) {
+      return res.status(404).json({ error: '未找到该广告' });
     }
     
     await pool.execute(`
@@ -333,8 +530,8 @@ app.put('/api/ads/:id', async (req, res) => {
     `, [
       ad.server_name,
       ad.area,
-      formatToUTC8(ad.open_time),  // 使用修复后的时间转换
-      formatToUTC8(ad.expire_time),// 使用修复后的时间转换
+      formatToUTC8(ad.open_time),
+      formatToUTC8(ad.expire_time),
       ad.feature || '',
       ad.exp_rate || '',
       ad.version || '',
@@ -354,20 +551,33 @@ app.put('/api/ads/:id', async (req, res) => {
   }
 });
 
-// 7. 批量删除广告
-app.delete('/api/ads/batch', async (req, res) => {
+// 8. 批量删除广告
+app.delete('/api/ads/batch', authenticateJWT, async (req, res) => {
   try {
     const { ids } = req.body;
+    
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: '请提供有效的广告ID列表' });
     }
     
-    const placeholders = ids.map(() => '?').join(',');
-    const [result] = await pool.execute(`DELETE FROM ads WHERE id IN (${placeholders})`, ids);
+    // 过滤并验证ID
+    const validIds = ids.filter(id => !isNaN(id) && id > 0);
+    if (validIds.length === 0) {
+      return res.status(400).json({ error: '请提供有效的广告ID' });
+    }
+    
+    // 限制批量操作数量
+    if (validIds.length > 100) {
+      return res.status(400).json({ error: '批量操作数量不能超过100条' });
+    }
+    
+    const placeholders = validIds.map(() => '?').join(',');
+    const [result] = await pool.execute(`DELETE FROM ads WHERE id IN (${placeholders})`, validIds);
     
     res.json({ 
       success: true, 
-      message: `已删除${result.affectedRows}条广告` 
+      message: `已删除${result.affectedRows}条广告`,
+      affectedRows: result.affectedRows
     });
   } catch (error) {
     console.error('批量删除失败:', error);
@@ -378,15 +588,17 @@ app.delete('/api/ads/batch', async (req, res) => {
   }
 });
 
-// 8. 删除单个广告
-app.delete('/api/ads/:id', async (req, res) => {
+// 9. 删除单个广告
+app.delete('/api/ads/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ error: '请提供广告ID' });
+    
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: '请提供有效的广告ID' });
     }
     
     const [result] = await pool.execute('DELETE FROM ads WHERE id = ?', [id]);
+    
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: '未找到该广告' });
     }
@@ -401,14 +613,26 @@ app.delete('/api/ads/:id', async (req, res) => {
   }
 });
 
-// 9. 广告续期
-app.post('/api/ads/:id/renew', async (req, res) => {
+// 10. 广告续期
+app.post('/api/ads/:id/renew', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
     const { new_expire_time } = req.body;
     
-    if (!id || !new_expire_time) {
-      return res.status(400).json({ error: '请提供广告ID和新的过期时间' });
+    if (!id || isNaN(id) || !new_expire_time) {
+      return res.status(400).json({ error: '请提供有效的广告ID和新的过期时间' });
+    }
+    
+    // 验证新过期时间
+    const newExpireTime = new Date(new_expire_time);
+    const now = new Date();
+    
+    if (isNaN(newExpireTime.getTime())) {
+      return res.status(400).json({ error: '无效的时间格式' });
+    }
+    
+    if (newExpireTime <= now) {
+      return res.status(400).json({ error: '新的过期时间不能早于当前时间' });
     }
     
     // 验证广告是否存在
@@ -422,11 +646,15 @@ app.post('/api/ads/:id/renew', async (req, res) => {
         expire_time = ?, updated_at = NOW()
       WHERE id = ?
     `, [
-      formatToUTC8(new_expire_time),  // 使用修复后的时间转换
+      formatToUTC8(new_expire_time),
       id
     ]);
     
-    res.json({ success: true, message: '广告已续期' });
+    res.json({ 
+      success: true, 
+      message: '广告已续期',
+      newExpireTime: newExpireTime.toISOString()
+    });
   } catch (error) {
     console.error('广告续期失败:', error);
     res.status(500).json({ 
@@ -436,8 +664,8 @@ app.post('/api/ads/:id/renew', async (req, res) => {
   }
 });
 
-// 10. 时区验证接口
-app.get('/api/verify-timezone', async (req, res) => {
+// 11. 时区验证接口
+app.get('/api/verify-timezone', authenticateJWT, async (req, res) => {
   try {
     // 查询数据库时区配置
     const [timezoneRows] = await pool.execute(
@@ -462,8 +690,8 @@ app.get('/api/verify-timezone', async (req, res) => {
   }
 });
 
-// 11. 批量续期广告
-app.post('/api/ads/batch/renew', async (req, res) => {
+// 12. 批量续期广告
+app.post('/api/ads/batch/renew', authenticateJWT, async (req, res) => {
   let connection;
   try {
     const { ids, duration_hours } = req.body;
@@ -473,20 +701,27 @@ app.post('/api/ads/batch/renew', async (req, res) => {
       return res.status(400).json({ error: '请提供有效的广告ID列表' });
     }
     
-    if (!duration_hours || isNaN(duration_hours) || duration_hours <= 0) {
-      return res.status(400).json({ error: '请提供有效的续期时长（小时）' });
+    // 过滤并验证ID
+    const validIds = ids.filter(id => !isNaN(id) && id > 0);
+    if (validIds.length === 0) {
+      return res.status(400).json({ error: '请提供有效的广告ID' });
     }
     
-    // 获取数据库当前时间（UTC+8）
-    const [timeRows] = await pool.execute('SELECT NOW() AS `current_time`');
-    const currentTime = timeRows[0].current_time;
+    // 限制批量操作数量
+    if (validIds.length > 100) {
+      return res.status(400).json({ error: '批量操作数量不能超过100条' });
+    }
+    
+    if (!duration_hours || isNaN(duration_hours) || duration_hours <= 0 || duration_hours > 720) {
+      return res.status(400).json({ error: '请提供有效的续期时长（1-720小时）' });
+    }
     
     // 使用事务确保批量操作原子性
     connection = await pool.getConnection();
     await connection.beginTransaction();
     
     // 构建批量更新SQL
-    const placeholders = ids.map(() => '?').join(',');
+    const placeholders = validIds.map(() => '?').join(',');
     const [result] = await connection.execute(`
       UPDATE ads 
       SET expire_time = IF(
@@ -496,7 +731,7 @@ app.post('/api/ads/batch/renew', async (req, res) => {
       ),
       updated_at = NOW()
       WHERE id IN (${placeholders})
-    `, [duration_hours, duration_hours, ...ids]);
+    `, [duration_hours, duration_hours, ...validIds]);
     
     await connection.commit();
     
@@ -517,7 +752,17 @@ app.post('/api/ads/batch/renew', async (req, res) => {
   }
 });
 
+// 错误处理中间件
+app.use((err, req, res, next) => {
+  console.error('未捕获的错误:', err);
+  res.status(500).json({
+    error: '服务器内部错误',
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
 // 启动服务器
 app.listen(port, () => {
   console.log(`服务器运行在 http://localhost:${port}`);
+  console.log(`当前环境: ${process.env.NODE_ENV || 'development'}`);
 });

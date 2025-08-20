@@ -6,7 +6,6 @@
     <title>游戏广告管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* 保持原有样式不变 */
         :root {
             --primary: #00a3ff;
             --primary-glow: rgba(0, 163, 255, 0.5);
@@ -70,7 +69,6 @@
             box-shadow: 0 0 10px var(--primary-glow);
         }
 
-        /* 表格样式增强 - 确保数据展示清晰 */
         .ad-table {
             width: 100%;
             border-collapse: separate;
@@ -382,6 +380,54 @@
             color: var(--text-secondary);
             margin-top: 5px;
         }
+
+        /* 登录表单样式 */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .login-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+        }
+
+        .auth-error {
+            color: var(--danger);
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
     </style>
 </head>
 <body>
@@ -389,7 +435,9 @@
     <div class="decor-element" style="width: 500px; height: 500px; position: fixed; top: -250px; left: -250px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); border-radius: 50%; opacity: 0.1; pointer-events: none;"></div>
     <div class="decor-element" style="width: 400px; height: 400px; position: fixed; bottom: -200px; right: -200px; background: radial-gradient(circle, var(--secondary) 0%, transparent 70%); border-radius: 50%; opacity: 0.1; pointer-events: none;"></div>
 
-    <div class="container">
+    <!-- 主内容区域 -->
+    <div id="mainContent" class="container" style="display: none;">
+        <button id="logoutBtn" class="btn logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
         <h1><i class="fas fa-gamepad"></i> 游戏广告管理系统</h1>
         
         <!-- 服务器时间显示 -->
@@ -397,18 +445,17 @@
             <i class="fas fa-clock"></i> 服务器时间 (UTC+8): <span id="serverTimeDisplay">加载中...</span>
         </div>
         
-       <!-- 搜索和筛选区域 -->
-<div class="search-bar">
-    <input type="text" id="searchInput" placeholder="搜索服务器名或特性...">
-    <select id="areaFilter">
-        <option value="">所有区域</option>
-        <option value="top_yellow">黄色区域</option>
-        <option value="white_area">白色区域</option>
-        <option value="orange_area">橙色区域</option>
-        <option value="green_area">绿色区域</option>
-    </select>
+        <!-- 搜索和筛选区域 -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索服务器名或特性...">
+            <select id="areaFilter">
+                <option value="">所有区域</option>
+                <option value="top_yellow">黄色区域</option>
+                <option value="white_area">白色区域</option>
+                <option value="orange_area">橙色区域</option>
+                <option value="green_area">绿色区域</option>
+            </select>
 
-    
             <select id="statusFilter">
                 <option value="">所有状态</option>
                 <option value="active">正在进行</option>
@@ -454,6 +501,23 @@
                 <tr><td colspan="9" class="status-message loading"><i class="fas fa-circle-notch fa-spin"></i> 加载广告数据中...</td></tr>
             </tbody>
         </table>
+    </div>
+    
+    <!-- 登录表单 -->
+    <div id="loginForm" class="login-container">
+        <h2><i class="fas fa-lock"></i> 管理员登录</h2>
+        <div id="loginError" class="auth-error" style="display: none;"></div>
+        <form class="login-form">
+            <div class="form-group">
+                <label for="loginUsername">用户名</label>
+                <input type="text" id="loginUsername" required placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">密码</label>
+                <input type="password" id="loginPassword" required placeholder="请输入密码">
+            </div>
+            <button type="button" id="submitLogin" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> 登录</button>
+        </form>
     </div>
     
     <!-- 广告编辑/新增模态框 -->
@@ -663,27 +727,98 @@
         let serverTimeOffset = 0; // 服务器时间与本地时间的偏移量（毫秒）
         let currentStep = 1;
         
-        // API基础地址 - 请替换为您实际的后端API地址
-        // 这些API应直接连接到您的数据库进行CRUD操作
+        // API基础地址
         const API_BASE_URL = 'http://localhost:3000/api';
 
         document.addEventListener('DOMContentLoaded', () => {
-            bindEventListeners();
-            startServerTimeSync();
-            loadUserPreferences();
-            loadAdData(); // 从数据库加载真实数据
+            // 检查是否已登录
+            const token = localStorage.getItem('token');
+            if (token) {
+                // 已登录，显示主内容
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                bindEventListeners();
+                startServerTimeSync();
+                loadUserPreferences();
+                loadAdData();
+            } else {
+                // 未登录，显示登录表单
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'none';
+                bindLoginEventListeners();
+            }
         });
+
+        // 绑定登录相关事件
+        function bindLoginEventListeners() {
+            document.getElementById('submitLogin').addEventListener('click', login);
+            
+            // 支持按Enter键登录
+            document.getElementById('loginPassword').addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    login();
+                }
+            });
+        }
+
+        // 登录功能
+        async function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const errorElement = document.getElementById('loginError');
+            
+            if (!username || !password) {
+                errorElement.textContent = '请输入用户名和密码';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.error || '登录失败，请检查用户名和密码');
+                }
+                
+                const data = await response.json();
+                // 保存令牌
+                localStorage.setItem('token', data.token);
+                
+                // 登录成功，切换到主界面
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                bindEventListeners();
+                startServerTimeSync();
+                loadUserPreferences();
+                loadAdData();
+                
+            } catch (error) {
+                console.error('登录失败:', error);
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                localStorage.removeItem('token');
+                location.reload();
+            }
+        }
 
         // 同步服务器时间 - 确保所有时间计算基于服务器时间(UTC+8)
         async function startServerTimeSync() {
             try {
                 // 从服务器获取当前时间(UTC+8)
-                const response = await fetch(`${API_BASE_URL}/time`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+                const response = await fetchWithAuth(`${API_BASE_URL}/time`);
                 
                 if (!response.ok) {
                     throw new Error(`获取服务器时间失败: ${response.status}`);
@@ -711,6 +846,67 @@
             }
         }
 
+        // 更新服务器时间显示
+        function updateServerTimeDisplay() {
+            const now = new Date(getCurrentServerTime());
+            // 格式化显示为YYYY-MM-DD HH:MM:SS
+            const formattedTime = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('serverTimeDisplay').textContent = formattedTime;
+        }
+
+        // 带身份验证的请求封装
+        async function fetchWithAuth(url, options = {}) {
+            // 从localStorage获取令牌
+            const token = localStorage.getItem('token');
+            
+            // 如果没有令牌，跳转到登录页
+            if (!token) {
+                localStorage.removeItem('token');
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'none';
+                bindLoginEventListeners();
+                throw new Error('未登录，请先登录');
+            }
+            
+            // 设置默认headers
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            // 添加令牌到请求头
+            headers['Authorization'] = `Bearer ${token}`;
+            
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+            
+            // 如果令牌过期或无效，跳转到登录页
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'none';
+                bindLoginEventListeners();
+                
+                const errorElement = document.getElementById('loginError');
+                errorElement.textContent = '登录已过期，请重新登录';
+                errorElement.style.display = 'block';
+                
+                throw new Error('登录已过期，请重新登录');
+            }
+            
+            return response;
+        }
+
         // 从数据库加载广告数据
         async function loadAdData(forceRefresh = false) {
             const tableBody = document.getElementById('adTableBody');
@@ -719,14 +915,9 @@
             if (countdownInterval) clearInterval(countdownInterval);
             
             try {
-                // 向服务器API请求数据，该API应直接查询数据库
-                const response = await fetch(`${API_BASE_URL}/ads`, {
+                // 向服务器API请求数据，使用带身份验证的请求
+                const response = await fetchWithAuth(`${API_BASE_URL}/ads`, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // 添加认证信息（根据您的实际认证方式）
-                        //'Authorization': 'Bearer ' + getAuthToken()
-                    },
                     cache: forceRefresh ? 'no-cache' : 'default'
                 });
                 
@@ -737,17 +928,12 @@
                 
                 // 接收来自数据库的真实数据
                 allAds = await response.json();
-                console.log('后端返回的原始数据:', allAds); // 添加此行
                 // 确保时间戳是数字类型（已转换为UTC+8时间戳）
-                allAds = allAds.map(ad => {
-    console.log('转换前 originalOpenTime:', ad.originalOpenTime);
-    console.log('转换前 originalExpireTime:', ad.originalExpireTime);
-    return {
-       ...ad,
-        originalOpenTime: Number(ad.originalOpenTime),
-        originalExpireTime: Number(ad.originalExpireTime)
-    };
-});
+                allAds = allAds.map(ad => ({
+                    ...ad,
+                    originalOpenTime: Number(ad.originalOpenTime),
+                    originalExpireTime: Number(ad.originalExpireTime)
+                }));
                 
                 // 渲染表格
                 renderAdTable(allAds);
@@ -872,23 +1058,15 @@
                 
                 if (isEdit) {
                     // 编辑现有广告 - 更新数据库记录
-                    response = await fetch(`${API_BASE_URL}/ads/${adId}`, {
+                    response = await fetchWithAuth(`${API_BASE_URL}/ads/${adId}`, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + getAuthToken()
-                        },
                         body: JSON.stringify(adsData[0])
                     });
                     actionMessage = "广告更新成功";
                 } else {
                     // 添加新广告 - 插入数据库
-                    response = await fetch(`${API_BASE_URL}/ads/batch`, {
+                    response = await fetchWithAuth(`${API_BASE_URL}/ads/batch`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + getAuthToken()
-                        },
                         body: JSON.stringify(adsData)
                     });
                     actionMessage = `成功发布了${batchCount}条新广告`;
@@ -920,11 +1098,8 @@
             if (!confirm(`确定要从数据库中删除ID为${adId}的广告吗？此操作不可恢复！`)) return;
             
             try {
-                const response = await fetch(`${API_BASE_URL}/ads/${adId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': 'Bearer ' + getAuthToken()
-                    }
+                const response = await fetchWithAuth(`${API_BASE_URL}/ads/${adId}`, {
+                    method: 'DELETE'
                 });
                 
                 if (!response.ok) {
@@ -952,12 +1127,8 @@
             if (!confirm(`确定要从数据库中删除选中的${selectedIds.size}条广告吗？此操作不可恢复！`)) return;
             
             try {
-                const response = await fetch(`${API_BASE_URL}/ads/batch`, {
+                const response = await fetchWithAuth(`${API_BASE_URL}/ads/batch`, {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + getAuthToken()
-                    },
                     body: JSON.stringify({ ids: Array.from(selectedIds) })
                 });
                 
@@ -1009,12 +1180,8 @@
             
             try {
                 // 调用服务器API更新数据库中的过期时间
-                const response = await fetch(`${API_BASE_URL}/ads/${currentRenewAdId}/renew`, {
+                const response = await fetchWithAuth(`${API_BASE_URL}/ads/${currentRenewAdId}/renew`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + getAuthToken()
-                    },
                     body: JSON.stringify({ 
                         duration_hours: duration,
                         new_expire_time: newExpireTime,
@@ -1052,12 +1219,8 @@
             
             try {
                 // 调用服务器API进行批量续期
-                const response = await fetch(`${API_BASE_URL}/ads/batch/renew`, {
+                const response = await fetchWithAuth(`${API_BASE_URL}/ads/batch/renew`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + getAuthToken()
-                    },
                     body: JSON.stringify({ 
                         ids: Array.from(selectedIds),
                         duration_hours: parseInt(duration),
@@ -1087,30 +1250,17 @@
             const areaFilter = document.getElementById('areaFilter').value;
             const statusFilter = document.getElementById('statusFilter').value;
             
-            // 调试信息：输出当前筛选参数
-            console.log('筛选参数:', {
-                searchText,
-                areaFilter,
-                statusFilter
-            });
-            
             try {
                 // 构建查询参数
                 const params = new URLSearchParams();
                 if (searchText) params.append('search', searchText);
-                // 确保区域筛选参数正确传递
                 if (areaFilter && areaFilter.trim() !== '') {
                     params.append('area', areaFilter.trim());
                 }
                 if (statusFilter) params.append('status', statusFilter);
                 
-                // 调用服务器筛选API，该API应在数据库中执行筛选查询
-                const response = await fetch(`${API_BASE_URL}/ads?${params.toString()}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + getAuthToken()
-                    }
-                });
+                // 调用服务器筛选API，使用带身份验证的请求
+                const response = await fetchWithAuth(`${API_BASE_URL}/ads?${params.toString()}`);
                 
                 if (!response.ok) {
                     throw new Error(`筛选失败: ${response.status}`);
@@ -1118,7 +1268,6 @@
                 
                 // 获取筛选后的数据库结果
                 const filteredAds = await response.json();
-                console.log('筛选结果数量:', filteredAds.length);
                 renderAdTable(filteredAds);
                 
             } catch (error) {
@@ -1159,15 +1308,16 @@
             localStorage.setItem('adManagerUserPrefs', JSON.stringify(userPreferences));
         }
 
-        // 获取认证令牌（根据您的认证机制实现）
+        // 获取认证令牌
         function getAuthToken() {
-            // 实际应用中应从安全存储中获取令牌
-            // 例如：return localStorage.getItem('authToken');
-            return 'your-auth-token'; // 替换为实际的令牌获取逻辑
+            return localStorage.getItem('token');
         }
 
         // 绑定所有事件监听器
         function bindEventListeners() {
+            // 退出登录按钮
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
             // 搜索和筛选
             document.getElementById('searchBtn').addEventListener('click', filterAds);
             document.getElementById('resetFilterBtn').addEventListener('click', () => {
@@ -1647,8 +1797,114 @@
 
         // 打开模态框
         function openModal(adId = null) {
+            // 重置表单
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> 新增广告';
+            document.getElementById('adId').value = '';
+            document.getElementById('serverName').value = '';
+            document.getElementById('area').value = '';
+            document.getElementById('batchCount').value = 1;
+            document.getElementById('timeOffsetGroup').style.display = 'none';
+            document.getElementById('openTime').value = '';
+            document.getElementById('expireTime').value = '';
+            document.getElementById('openTimeLocal').textContent = '';
+            document.getElementById('expireTimeLocal').textContent = '';
+            document.getElementById('feature').value = '';
+            document.getElementById('featureLength').textContent = '0';
+            document.getElementById('expRate').value = '';
+            document.getElementById('version').value = '';
+            document.getElementById('homepage').value = '';
+            document.getElementById('enableReminder').checked = false;
+            document.getElementById('reminderTime').value = 24;
+            document.getElementById('reminderTimeGroup').style.display = 'none';
+            document.getElementById('confirmCheck').checked = false;
+            
+            // 重置步骤
+            currentStep = 1;
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.step-indicator-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.step-content[data-step="1"]`).classList.add('active');
+            document.querySelector(`.step-indicator-item[data-step="1"]`).classList.add('active');
+            updateStepButtons();
+            
+            // 如果是编辑模式，加载广告数据
             if (adId) {
                 editAd(adId);
                 return;
             }
-        }    
+            
+            // 设置默认时间为当前时间加1小时和加2小时
+            const now = new Date(getCurrentServerTime());
+            const openTime = new Date(now.getTime() + 60 * 60 * 1000); // 1小时后
+            const expireTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2小时后
+            
+            document.getElementById('openTime').value = formatDateTimeForInput(openTime.getTime());
+            document.getElementById('expireTime').value = formatDateTimeForInput(expireTime.getTime());
+            
+            // 显示模态框
+            document.getElementById('adModal').classList.add('active');
+        }
+
+        // 关闭广告编辑模态框
+        function closeModal() {
+            document.getElementById('adModal').classList.remove('active');
+        }
+
+        // 启动倒计时更新
+        function startCountdownUpdates() {
+            // 每分钟更新一次倒计时
+            countdownInterval = setInterval(() => {
+                allAds.forEach(ad => {
+                    const countdownElement = document.getElementById(`countdown-${ad.id}`);
+                    if (countdownElement) {
+                        countdownElement.textContent = getCountdownText(ad);
+                        countdownElement.className = getCountdownClass(ad);
+                    }
+                });
+            }, 60000); // 60秒更新一次
+        }
+
+        // 显示成功消息
+        function showSuccessMessage(title, message) {
+            document.getElementById('notificationTitle').textContent = title;
+            document.getElementById('notificationMessage').textContent = message;
+            const notification = document.getElementById('successNotification');
+            notification.classList.add('show');
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 更新过期时间预览
+        function updateExpireTimePreview() {
+            const openTimeStr = document.getElementById('openTime').value;
+            if (!openTimeStr) return;
+            
+            const openTime = new Date(openTimeStr);
+            const expireTime = new Date(openTime.getTime() + 60 * 60 * 1000); // 默认1小时后过期
+            
+            // 如果当前没有设置过期时间，或者过期时间早于开始时间，则自动设置
+            const currentExpireTimeStr = document.getElementById('expireTime').value;
+            if (!currentExpireTimeStr || new Date(currentExpireTimeStr) <= openTime) {
+                document.getElementById('expireTime').value = expireTime.toISOString().slice(0, 16);
+                
+                const localTime = new Date(convertUTC8ToLocal(document.getElementById('expireTime').value)).toLocaleString();
+                document.getElementById('expireTimeLocal').textContent = localTime;
+            }
+        }
+
+        // 将区域值转换为显示文本
+        function getAreaText(areaValue) {
+            const areaMap = {
+                'top_yellow': '黄色区域',
+                'white_area': '白色区域',
+                'orange_area': '橙色区域',
+                'green_area': '绿色区域'
+            };
+            return areaMap[areaValue] || areaValue || '未设置';
+        }
+    </script>
+</body>
+</html>
+    
