@@ -1,0 +1,21 @@
+node_modules/
+.DS_Store
+.env
+
+# 大文件/压缩包（防止类似 project_images.tar 的文件再次被提交）
+*.tar
+*.tar.gz
+*.zip
+*.7z
+
+# 日志/临时文件
+logs/
+temp/
+
+# BFG 相关（工具和清理报告无需提交）
+bfg-*.jar       # 匹配所有 BFG 版本的 jar 文件
+.git.bfg-report/ # BFG 清理产生的报告文件夹
+
+# Node.js 依赖锁定文件（根据你的包管理工具选，比如用 npm 就加这个）
+package-lock.json
+# 如果用 yarn，就加：yarn.lock
