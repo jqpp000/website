@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>广告管理 - 58奇迹游戏推荐站</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style>
+        body {
+            background: #2e220a;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            text-align: center;
+            font-family: "宋体";
+        }
+        .admin-container {
+            width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        .admin-container table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .admin-container th, .admin-container td {
+            border: 1px solid #FFCC22;
+            padding: 8px;
+            text-align: left;
+        }
+        .admin-container th {
+            background: #A84200;
+            color: white;
+        }
+        .admin-container button {
+            padding: 8px;
+            background: #DC143C;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <h2>广告管理</h2>
+        <form id="adForm">
+        <input type="text" id="serverName" placeholder="服务器名" required>
+        <input type="text" id="openTime" placeholder="开机时间" required>
+        <textarea id="description" placeholder="游戏版本特色介绍" required></textarea>
+        <button type="submit">提交广告</button>
+        <button type="button" onclick="window.location.href='index.html'">返回主页</button>
+        <script>
+            document.getElementById('adForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const adData = {
+                    serverName: document.getElementById('serverName').value,
+                    openTime: document.getElementById('openTime').value,
+                    description: document.getElementById('description').value
+                };
+                let ads = JSON.parse(localStorage.getItem('ads') || '[]');
+                ads.push(adData);
+                localStorage.setItem('ads', JSON.stringify(ads));
+                alert('广告提交成功！');
+                window.location.href = 'index.html';
+            });
+            <table>
+                <tr>
+                    <th>服务器名</th>
+                    <th>开机时间</th>
+                    <th>描述</th>
+                    <th>经验</th>
+                    <th>版本</th>
+                </tr>
+                <tr>
+                    <td><input type="text" name="serverName" required></td>
+                    <td><input type="text" name="startTime" required></td>
+                    <td><input type="text" name="description" required></td>
+                    <td><input type="text" name="exp" required></td>
+                    <td><input type="text" name="version" required></td>
+                </tr>
+            </table>
+            <button type="submit">提交广告</button>
+            <button type="button" onclick="window.location.href='index.html'">返回主页</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById('adForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('广告提交成功！');
+        });
+    </script>
+</body>
+</html>
