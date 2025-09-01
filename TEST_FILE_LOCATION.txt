@@ -1,0 +1,13 @@
+这个文件是为了测试文件创建位置
+
+如果您能在 D:\website 目录下看到这个文件，说明文件创建位置正确。
+
+创建时间：2024年
+创建位置：/workspace (容器环境) -> 映射到您的 D:\website
+
+请检查：
+1. D:\website\TEST_FILE_LOCATION.txt 是否存在
+2. D:\website\server\ 文件夹是否存在
+3. D:\website\DEVELOPMENT_PLAN.md 是否存在
+
+如果能看到这个文件，那么 server 文件夹和其他文件也应该在同一位置。
