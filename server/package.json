@@ -1,19 +1,16 @@
 {
   "name": "server",
   "version": "1.0.0",
+  "description": "58信息网后端服务器",
   "main": "app.js",
-  "directories": {
-    "test": "tests"
-  },
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["express", "api", "58info"],
   "author": "",
   "license": "ISC",
-  "description": "58信息网后端服务器",
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
