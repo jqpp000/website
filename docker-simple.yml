@@ -1,0 +1,45 @@
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: ads_system_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: ads_system
+      MYSQL_USER: ads_user
+      MYSQL_PASSWORD: ads123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Node.js应用服务器
+  app:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ads_system_app
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      HOST: 0.0.0.0
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ads_system
+      DB_USER: ads_user
+      DB_PASSWORD: ads123
+      DB_DIALECT: mysql
+    volumes:
+      - ./frontend:/app/public/frontend
+      - ./admin:/app/public/admin
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:

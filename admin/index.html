@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广告管理后台系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h2><i class="fas fa-ad"></i> 广告管理后台</h2>
+                <p>请登录以继续操作</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username"><i class="fas fa-user"></i></label>
+                    <input type="text" id="username" name="username" placeholder="用户名" required>
+                </div>
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i></label>
+                    <input type="password" id="password" name="password" placeholder="密码" required>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <span>记住密码</span>
+                    </label>
+                </div>
+                <button type="submit" class="login-btn">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="mainContainer" class="main-container" style="display: none;">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <div class="header-left">
+                <h1><i class="fas fa-ad"></i> 广告管理后台</h1>
+            </div>
+            <div class="header-right">
+                <span class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="currentUser">管理员</span>
+                </span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> 退出
+                </button>
+            </div>
+        </header>
+
+        <!-- 左侧导航栏 -->
+        <nav class="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <a href="#dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>仪表盘</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-page="ads">
+                    <a href="#ads">
+                        <i class="fas fa-ad"></i>
+                        <span>广告管理</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-page="regions">
+                    <a href="#regions">
+                        <i class="fas fa-th-large"></i>
+                        <span>区域管理</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-page="logs">
+                    <a href="#logs">
+                        <i class="fas fa-history"></i>
+                        <span>操作日志</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-page="settings">
+                    <a href="#settings">
+                        <i class="fas fa-cog"></i>
+                        <span>系统设置</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 仪表盘页面 -->
+            <div id="dashboard" class="page-content active">
+                <div class="page-header">
+                    <h2>仪表盘</h2>
+                    <p>广告系统运行状态概览</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-ad"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalAds">0</h3>
+                            <p>总广告数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon active">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="activeAds">0</h3>
+                            <p>正常广告</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="expiringAds">0</h3>
+                            <p>即将到期</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon danger">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="expiredAds">0</h3>
+                            <p>已过期</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>今日到期广告</h3>
+                        <div id="todayExpiring" class="expiring-list">
+                            <!-- 动态加载 -->
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>本周到期广告</h3>
+                        <div id="weekExpiring" class="expiring-list">
+                            <!-- 动态加载 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 广告管理页面 -->
+            <div id="ads" class="page-content">
+                <div class="page-header">
+                    <h2>广告管理</h2>
+                    <button class="btn btn-primary" onclick="showAddAdModal()">
+                        <i class="fas fa-plus"></i> 添加广告
+                    </button>
+                </div>
+
+                <!-- 筛选工具栏 -->
+                <div class="filter-toolbar">
+                    <div class="filter-group">
+                        <label>区域筛选:</label>
+                        <select id="regionFilter">
+                            <option value="">全部区域</option>
+                            <option value="yellow">黄色置顶区</option>
+                            <option value="white">套白区域</option>
+                            <option value="lightYellow">套淡黄区域</option>
+                            <option value="cyan">套青区域</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>状态筛选:</label>
+                        <select id="statusFilter">
+                            <option value="">全部状态</option>
+                            <option value="active">正常</option>
+                            <option value="expiring">即将到期</option>
+                            <option value="expired">已过期</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>时间范围:</label>
+                        <input type="date" id="startDateFilter">
+                        <span>至</span>
+                        <input type="date" id="endDateFilter">
+                    </div>
+                    <div class="filter-group">
+                        <label>关键词搜索:</label>
+                        <input type="text" id="searchKeyword" placeholder="搜索广告标题/内容">
+                        <button class="btn btn-secondary" onclick="searchAds()">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 广告列表 -->
+                <div class="ads-table-container">
+                    <table class="ads-table">
+                        <thead>
+                            <tr>
+                                <th width="50">
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                </th>
+                                <th width="80">ID</th>
+                                <th width="200">广告标题</th>
+                                <th width="100">所属区域</th>
+                                <th width="120">开始时间</th>
+                                <th width="120">结束时间</th>
+                                <th width="100">当前状态</th>
+                                <th width="150">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adsTableBody">
+                            <!-- 动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控件 -->
+                <div class="pagination">
+                    <button class="btn btn-secondary" onclick="previousPage()">
+                        <i class="fas fa-chevron-left"></i> 上一页
+                    </button>
+                    <span id="pageInfo">第 1 页，共 1 页</span>
+                    <button class="btn btn-secondary" onclick="nextPage()">
+                        下一页 <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- 批量操作 -->
+                <div class="batch-actions">
+                    <button class="btn btn-danger" onclick="batchDelete()">
+                        <i class="fas fa-trash"></i> 批量删除
+                    </button>
+                    <button class="btn btn-warning" onclick="batchRenew()">
+                        <i class="fas fa-sync"></i> 批量续费
+                    </button>
+                </div>
+            </div>
+
+            <!-- 区域管理页面 -->
+            <div id="regions" class="page-content">
+                <div class="page-header">
+                    <h2>区域管理</h2>
+                    <p>管理广告展示区域配置</p>
+                </div>
+                
+                <div class="regions-grid">
+                    <div class="region-card">
+                        <h3>黄色置顶区</h3>
+                        <div class="region-info">
+                            <p><strong>当前广告数:</strong> <span id="yellowCount">0</span></p>
+                            <p><strong>最大容量:</strong> 20条</p>
+                            <p><strong>背景色:</strong> #FFFF00</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="viewRegionAds('yellow')">
+                            查看广告
+                        </button>
+                    </div>
+                    <div class="region-card">
+                        <h3>套白区域</h3>
+                        <div class="region-info">
+                            <p><strong>当前广告数:</strong> <span id="whiteCount">0</span></p>
+                            <p><strong>最大容量:</strong> 145条</p>
+                            <p><strong>背景色:</strong> #FFFFFF</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="viewRegionAds('white')">
+                            查看广告
+                        </button>
+                    </div>
+                    <div class="region-card">
+                        <h3>套淡黄区域</h3>
+                        <div class="region-info">
+                            <p><strong>当前广告数:</strong> <span id="lightYellowCount">0</span></p>
+                            <p><strong>最大容量:</strong> 53条</p>
+                            <p><strong>背景色:</strong> #FFFF00</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="viewRegionAds('lightYellow')">
+                            查看广告
+                        </button>
+                    </div>
+                    <div class="region-card">
+                        <h3>套青区域</h3>
+                        <div class="region-info">
+                            <p><strong>当前广告数:</strong> <span id="cyanCount">0</span></p>
+                            <p><strong>最大容量:</strong> 67条</p>
+                            <p><strong>背景色:</strong> #d6ff52</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="viewRegionAds('cyan')">
+                            查看广告
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作日志页面 -->
+            <div id="logs" class="page-content">
+                <div class="page-header">
+                    <h2>操作日志</h2>
+                    <p>系统操作记录</p>
+                </div>
+                
+                <div class="logs-table-container">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>操作人</th>
+                                <th>操作类型</th>
+                                <th>操作详情</th>
+                                <th>IP地址</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <!-- 动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 系统设置页面 -->
+            <div id="settings" class="page-content">
+                <div class="page-header">
+                    <h2>系统设置</h2>
+                    <p>系统参数配置</p>
+                </div>
+                
+                <div class="settings-form">
+                    <div class="setting-group">
+                        <label>到期提醒阈值（天）:</label>
+                        <input type="number" id="expiryWarningDays" min="1" max="30" value="7">
+                        <p class="setting-desc">提前多少天提醒广告即将到期</p>
+                    </div>
+                    <div class="setting-group">
+                        <label>每页显示数量:</label>
+                        <input type="number" id="pageSize" min="10" max="100" value="20">
+                        <p class="setting-desc">广告列表每页显示的广告数量</p>
+                    </div>
+                    <div class="setting-group">
+                        <label>自动刷新间隔（秒）:</label>
+                        <input type="number" id="autoRefreshInterval" min="30" max="300" value="60">
+                        <p class="setting-desc">自动刷新广告状态的间隔时间</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> 保存设置
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加/编辑广告模态框 -->
+    <div id="adModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">添加广告</h3>
+                <span class="close" onclick="closeAdModal()">&times;</span>
+            </div>
+            <form id="adForm" class="ad-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adTitle">广告标题 *</label>
+                        <input type="text" id="adTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adRegion">所属区域 *</label>
+                        <select id="adRegion" name="region" required>
+                            <option value="">请选择区域</option>
+                            <option value="yellow">黄色置顶区</option>
+                            <option value="white">套白区域</option>
+                            <option value="lightYellow">套淡黄区域</option>
+                            <option value="cyan">套青区域</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adContent">广告内容 *</label>
+                        <textarea id="adContent" name="content" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="adLink">跳转链接 *</label>
+                        <input type="url" id="adLink" name="link" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adStartDate">开始时间 *</label>
+                        <input type="datetime-local" id="adStartDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adEndDate">结束时间 *</label>
+                        <input type="datetime-local" id="adEndDate" name="endDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adExperience">经验倍数</label>
+                        <input type="text" id="adExperience" name="experience" placeholder="如：300倍">
+                    </div>
+                    <div class="form-group">
+                        <label for="adVersion">游戏版本</label>
+                        <input type="text" id="adVersion" name="version" placeholder="如：1.03H">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adSortWeight">排序权重</label>
+                        <input type="number" id="adSortWeight" name="sortWeight" value="0" min="0">
+                        <p class="form-desc">数字越大排序越靠前</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="adStatus">状态</label>
+                        <select id="adStatus" name="status">
+                            <option value="active">启用</option>
+                            <option value="inactive">禁用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAdModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 续费模态框 -->
+    <div id="renewModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>广告续费</h3>
+                <span class="close" onclick="closeRenewModal()">&times;</span>
+            </div>
+            <form id="renewForm" class="renew-form">
+                <div class="form-group">
+                    <label>广告标题:</label>
+                    <span id="renewAdTitle"></span>
+                </div>
+                <div class="form-group">
+                    <label>当前到期时间:</label>
+                    <span id="renewCurrentEndDate"></span>
+                </div>
+                <div class="form-group">
+                    <label for="renewDuration">续费时长:</label>
+                    <div class="duration-inputs">
+                        <input type="number" id="renewDays" min="1" value="30">
+                        <span>天</span>
+                        <input type="number" id="renewWeeks" min="1" value="0">
+                        <span>周</span>
+                        <input type="number" id="renewMonths" min="1" value="0">
+                        <span>月</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>新的到期时间:</label>
+                    <span id="renewNewEndDate"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRenewModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">确认续费</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div id="deleteModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+                <span class="close" onclick="closeDeleteModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>确认删除该广告？删除后无法恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
