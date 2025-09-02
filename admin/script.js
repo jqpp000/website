@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeSystem();
     setupEventListeners();
     generateSampleData();
+    
+    // 处理URL哈希值
+    handleUrlHash();
+    
+    // 监听哈希值变化
+    window.addEventListener('hashchange', handleUrlHash);
 });
 
 // 初始化系统
@@ -34,6 +40,12 @@ function setupEventListeners() {
         loginForm.addEventListener('submit', handleLogin);
     }
     
+    // 广告表单提交
+    const adForm = document.getElementById('adForm');
+    if (adForm) {
+        adForm.addEventListener('submit', handleAdFormSubmit);
+    }
+    
     // 导航菜单点击
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', function(e) {
@@ -42,6 +54,17 @@ function setupEventListeners() {
             showPage(page);
         });
     });
+    
+    // 模态框外部点击关闭
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('adModal');
+        if (event.target === modal) {
+            closeAdModal();
+        }
+    });
+    
+    // 添加所有按钮的事件监听器
+    setupButtonEventListeners();
 }
 
 // 检查登录状态
@@ -50,6 +73,10 @@ function checkLoginStatus() {
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         showMainInterface();
+    } else {
+        // 确保显示登录界面
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('mainContainer').style.display = 'none';
     }
 }
 
@@ -77,7 +104,7 @@ function handleLogin(e) {
 }
 
 // 显示主界面
-function showMainInterface() {
+async function showMainInterface() {
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('mainContainer').style.display = 'block';
     
@@ -85,8 +112,12 @@ function showMainInterface() {
         document.getElementById('currentUser').textContent = currentUser.username;
     }
     
+    // 确保默认显示仪表盘页面
+    showPage('dashboard');
+    
+    // 从API加载数据
+    await loadAdsFromAPI();
     loadDashboardData();
-    loadAdsData();
     loadRegionStats();
 }
 
@@ -149,7 +180,7 @@ function loadDashboardData() {
     let expiredAds = 0;
     
     adsDatabase.forEach(ad => {
-        const endDate = new Date(ad.endDate);
+        const endDate = new Date(ad.end_date);
         const daysUntilExpiry = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
         
         if (endDate > now) {
@@ -189,7 +220,7 @@ function loadAdsData() {
     adsDatabase.forEach(ad => {
         const row = document.createElement('tr');
         const now = new Date();
-        const endDate = new Date(ad.endDate);
+        const endDate = new Date(ad.end_date);
         const daysUntilExpiry = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
         
         if (endDate <= now) {
@@ -205,8 +236,8 @@ function loadAdsData() {
             <td>${ad.id}</td>
             <td>${ad.title}</td>
             <td>${getRegionName(ad.region)}</td>
-            <td>${formatDateTime(new Date(ad.startDate))}</td>
-            <td>${formatDateTime(new Date(ad.endDate))}</td>
+            <td>${formatDateTime(new Date(ad.start_date))}</td>
+            <td>${formatDateTime(new Date(ad.end_date))}</td>
             <td>${statusBadge}</td>
             <td>
                 <button class="btn btn-secondary btn-sm" onclick="editAd(${ad.id})">
@@ -386,4 +417,323 @@ function showNotification(message, type = 'info') {
             notification.parentNode.removeChild(notification);
         }
     }, 3000);
+}
+
+// 显示添加广告模态框
+function showAddAdModal() {
+    const modal = document.getElementById('adModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const form = document.getElementById('adForm');
+    
+    if (modal && modalTitle && form) {
+        modalTitle.textContent = '添加广告';
+        form.reset();
+        
+        // 设置默认日期
+        const now = new Date();
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        
+        const startDateInput = document.getElementById('adStartDate');
+        const endDateInput = document.getElementById('adEndDate');
+        
+        if (startDateInput) startDateInput.value = formatDateTimeLocal(now);
+        if (endDateInput) endDateInput.value = formatDateTimeLocal(tomorrow);
+        
+        modal.style.display = 'block';
+    } else {
+        showNotification('模态框元素未找到', 'error');
+    }
+}
+
+// 关闭广告模态框
+function closeAdModal() {
+    const modal = document.getElementById('adModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 处理广告表单提交
+async function handleAdFormSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const adData = {
+        title: formData.get('title'),
+        region: formData.get('region'),
+        startDate: formData.get('startDate'),
+        endDate: formData.get('endDate'),
+        content: formData.get('content'),
+        experience: formData.get('experience'),
+        version: formData.get('version'),
+        link: formData.get('link'),
+        sortWeight: formData.get('sortWeight') || 0,
+        startTime: formData.get('startTime') || '',
+        status: formData.get('status') || 'active'
+    };
+    
+    // 验证必填字段
+    if (!adData.title || !adData.region || !adData.startDate || !adData.endDate) {
+        showNotification('请填写所有必填字段', 'error');
+        return;
+    }
+    
+    // 验证日期
+    const startDate = new Date(adData.startDate);
+    const endDate = new Date(adData.endDate);
+    
+    if (endDate <= startDate) {
+        showNotification('结束时间必须晚于开始时间', 'error');
+        return;
+    }
+    
+    try {
+        // 通过API保存到数据库
+        const response = await fetch('/api/v1/ads', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(adData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // 刷新广告列表
+            await loadAdsFromAPI();
+            
+            // 关闭模态框
+            closeAdModal();
+            
+            // 显示成功消息
+            showNotification('广告添加成功', 'success');
+        } else {
+            showNotification('广告添加失败: ' + (result.error || '未知错误'), 'error');
+        }
+    } catch (error) {
+        console.error('添加广告失败:', error);
+        showNotification('网络错误，请稍后重试', 'error');
+    }
+}
+
+// 处理URL哈希值
+function handleUrlHash() {
+    const hash = window.location.hash.substring(1); // 移除 # 符号
+    
+    if (hash && currentUser) {
+        // 如果用户已登录且有哈希值，则跳转到对应页面
+        const validPages = ['dashboard', 'ads', 'regions', 'logs'];
+        if (validPages.includes(hash)) {
+            showPage(hash);
+        } else {
+            // 无效的哈希值，默认显示仪表盘
+            showPage('dashboard');
+            window.location.hash = '#dashboard';
+        }
+    } else if (currentUser) {
+        // 用户已登录但没有哈希值，默认显示仪表盘
+        showPage('dashboard');
+        window.location.hash = '#dashboard';
+    }
+}
+
+// 设置所有按钮的事件监听器
+function setupButtonEventListeners() {
+    // 退出登录按钮
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
+    
+    // 添加广告按钮
+    const addAdBtn = document.getElementById('addAdBtn');
+    if (addAdBtn) {
+        addAdBtn.addEventListener('click', showAddAdModal);
+    }
+    
+    // 搜索广告按钮
+    const searchAdsBtn = document.getElementById('searchAdsBtn');
+    if (searchAdsBtn) {
+        searchAdsBtn.addEventListener('click', searchAds);
+    }
+    
+    // 分页按钮
+    const previousPageBtn = document.getElementById('previousPageBtn');
+    if (previousPageBtn) {
+        previousPageBtn.addEventListener('click', previousPage);
+    }
+    
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', nextPage);
+    }
+    
+    // 批量操作按钮
+    const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+    if (batchDeleteBtn) {
+        batchDeleteBtn.addEventListener('click', batchDelete);
+    }
+    
+    const batchRenewBtn = document.getElementById('batchRenewBtn');
+    if (batchRenewBtn) {
+        batchRenewBtn.addEventListener('click', batchRenew);
+    }
+    
+    // 区域查看按钮
+    const viewYellowAdsBtn = document.getElementById('viewYellowAdsBtn');
+    if (viewYellowAdsBtn) {
+        viewYellowAdsBtn.addEventListener('click', () => viewRegionAds('yellow'));
+    }
+    
+    const viewWhiteAdsBtn = document.getElementById('viewWhiteAdsBtn');
+    if (viewWhiteAdsBtn) {
+        viewWhiteAdsBtn.addEventListener('click', () => viewRegionAds('white'));
+    }
+    
+    const viewLightYellowAdsBtn = document.getElementById('viewLightYellowAdsBtn');
+    if (viewLightYellowAdsBtn) {
+        viewLightYellowAdsBtn.addEventListener('click', () => viewRegionAds('lightYellow'));
+    }
+    
+    const viewCyanAdsBtn = document.getElementById('viewCyanAdsBtn');
+    if (viewCyanAdsBtn) {
+        viewCyanAdsBtn.addEventListener('click', () => viewRegionAds('cyan'));
+    }
+    
+    // 保存设置按钮
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', saveSettings);
+    }
+    
+    // 模态框关闭按钮
+    const closeAdModalBtn = document.getElementById('closeAdModalBtn');
+    if (closeAdModalBtn) {
+        closeAdModalBtn.addEventListener('click', closeAdModal);
+    }
+    
+    const cancelAdBtn = document.getElementById('cancelAdBtn');
+    if (cancelAdBtn) {
+        cancelAdBtn.addEventListener('click', closeAdModal);
+    }
+    
+    const closeRenewModalBtn = document.getElementById('closeRenewModalBtn');
+    if (closeRenewModalBtn) {
+        closeRenewModalBtn.addEventListener('click', closeRenewModal);
+    }
+    
+    const cancelRenewBtn = document.getElementById('cancelRenewBtn');
+    if (cancelRenewBtn) {
+        cancelRenewBtn.addEventListener('click', closeRenewModal);
+    }
+    
+    const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
+    if (closeDeleteModalBtn) {
+        closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
+    }
+    
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    }
+    
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', confirmDelete);
+    }
+}
+
+// 从API加载广告数据
+async function loadAdsFromAPI() {
+    try {
+        const response = await fetch('/api/v1/ads');
+        const result = await response.json();
+        
+        if (result.success) {
+            adsDatabase = result.data.ads || [];
+            loadAdsData();
+        } else {
+            console.error('加载广告数据失败:', result.error);
+            showNotification('加载广告数据失败', 'error');
+        }
+    } catch (error) {
+        console.error('网络错误:', error);
+        showNotification('网络错误，请稍后重试', 'error');
+    }
+}
+
+// 加载广告数据（别名函数）
+function loadAds() {
+    loadAdsFromAPI();
+}
+
+// 搜索广告
+function searchAds() {
+    const keyword = document.getElementById('searchKeyword').value;
+    const region = document.getElementById('regionFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    
+    // 这里应该实现搜索逻辑
+    console.log('搜索广告:', { keyword, region, status });
+    showNotification('搜索功能开发中', 'info');
+}
+
+// 上一页
+function previousPage() {
+    console.log('上一页');
+    showNotification('分页功能开发中', 'info');
+}
+
+// 下一页
+function nextPage() {
+    console.log('下一页');
+    showNotification('分页功能开发中', 'info');
+}
+
+// 批量删除
+function batchDelete() {
+    console.log('批量删除');
+    showNotification('批量删除功能开发中', 'info');
+}
+
+// 批量续费
+function batchRenew() {
+    console.log('批量续费');
+    showNotification('批量续费功能开发中', 'info');
+}
+
+// 查看区域广告
+function viewRegionAds(region) {
+    console.log('查看区域广告:', region);
+    showNotification(`查看${region}区域广告功能开发中`, 'info');
+}
+
+// 保存设置
+function saveSettings() {
+    console.log('保存设置');
+    showNotification('设置保存功能开发中', 'info');
+}
+
+// 关闭续费模态框
+function closeRenewModal() {
+    const modal = document.getElementById('renewModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 关闭删除模态框
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 确认删除
+function confirmDelete() {
+    console.log('确认删除');
+    showNotification('删除功能开发中', 'info');
+    closeDeleteModal();
 }

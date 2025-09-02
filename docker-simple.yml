@@ -29,6 +29,8 @@ services:
       NODE_ENV: development
       PORT: 3003
       HOST: 0.0.0.0
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ads_system

@@ -47,7 +47,7 @@
                     <i class="fas fa-user-circle"></i>
                     <span id="currentUser">管理员</span>
                 </span>
-                <button class="logout-btn" onclick="logout()">
+                <button class="logout-btn" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i> 退出
                 </button>
             </div>
@@ -157,7 +157,7 @@
             <div id="ads" class="page-content">
                 <div class="page-header">
                     <h2>广告管理</h2>
-                    <button class="btn btn-primary" onclick="showAddAdModal()">
+                    <button class="btn btn-primary" id="addAdBtn">
                         <i class="fas fa-plus"></i> 添加广告
                     </button>
                 </div>
@@ -192,7 +192,7 @@
                     <div class="filter-group">
                         <label>关键词搜索:</label>
                         <input type="text" id="searchKeyword" placeholder="搜索广告标题/内容">
-                        <button class="btn btn-secondary" onclick="searchAds()">
+                        <button class="btn btn-secondary" id="searchAdsBtn">
                             <i class="fas fa-search"></i> 搜索
                         </button>
                     </div>
@@ -223,21 +223,21 @@
 
                 <!-- 分页控件 -->
                 <div class="pagination">
-                    <button class="btn btn-secondary" onclick="previousPage()">
+                    <button class="btn btn-secondary" id="previousPageBtn">
                         <i class="fas fa-chevron-left"></i> 上一页
                     </button>
                     <span id="pageInfo">第 1 页，共 1 页</span>
-                    <button class="btn btn-secondary" onclick="nextPage()">
+                    <button class="btn btn-secondary" id="nextPageBtn">
                         下一页 <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
 
                 <!-- 批量操作 -->
                 <div class="batch-actions">
-                    <button class="btn btn-danger" onclick="batchDelete()">
+                    <button class="btn btn-danger" id="batchDeleteBtn">
                         <i class="fas fa-trash"></i> 批量删除
                     </button>
-                    <button class="btn btn-warning" onclick="batchRenew()">
+                    <button class="btn btn-warning" id="batchRenewBtn">
                         <i class="fas fa-sync"></i> 批量续费
                     </button>
                 </div>
@@ -258,7 +258,7 @@
                             <p><strong>最大容量:</strong> 20条</p>
                             <p><strong>背景色:</strong> #FFFF00</p>
                         </div>
-                        <button class="btn btn-primary" onclick="viewRegionAds('yellow')">
+                        <button class="btn btn-primary" id="viewYellowAdsBtn">
                             查看广告
                         </button>
                     </div>
@@ -269,7 +269,7 @@
                             <p><strong>最大容量:</strong> 145条</p>
                             <p><strong>背景色:</strong> #FFFFFF</p>
                         </div>
-                        <button class="btn btn-primary" onclick="viewRegionAds('white')">
+                        <button class="btn btn-primary" id="viewWhiteAdsBtn">
                             查看广告
                         </button>
                     </div>
@@ -280,7 +280,7 @@
                             <p><strong>最大容量:</strong> 53条</p>
                             <p><strong>背景色:</strong> #FFFF00</p>
                         </div>
-                        <button class="btn btn-primary" onclick="viewRegionAds('lightYellow')">
+                        <button class="btn btn-primary" id="viewLightYellowAdsBtn">
                             查看广告
                         </button>
                     </div>
@@ -291,7 +291,7 @@
                             <p><strong>最大容量:</strong> 67条</p>
                             <p><strong>背景色:</strong> #d6ff52</p>
                         </div>
-                        <button class="btn btn-primary" onclick="viewRegionAds('cyan')">
+                        <button class="btn btn-primary" id="viewCyanAdsBtn">
                             查看广告
                         </button>
                     </div>
@@ -346,7 +346,7 @@
                         <input type="number" id="autoRefreshInterval" min="30" max="300" value="60">
                         <p class="setting-desc">自动刷新广告状态的间隔时间</p>
                     </div>
-                    <button class="btn btn-primary" onclick="saveSettings()">
+                    <button class="btn btn-primary" id="saveSettingsBtn">
                         <i class="fas fa-save"></i> 保存设置
                     </button>
                 </div>
@@ -359,61 +359,76 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">添加广告</h3>
-                <span class="close" onclick="closeAdModal()">&times;</span>
+                <span class="close" id="closeAdModalBtn">&times;</span>
             </div>
             <form id="adForm" class="ad-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="adTitle">广告标题 *</label>
-                        <input type="text" id="adTitle" name="title" required>
+                        <label for="adTitle">服务器名 *</label>
+                        <input type="text" id="adTitle" name="title" required placeholder="如：《豪-情》、▄豪情奇迹50倍▄">
+                        <small>服务器名称，支持特殊符号装饰</small>
                     </div>
                     <div class="form-group">
                         <label for="adRegion">所属区域 *</label>
                         <select id="adRegion" name="region" required>
                             <option value="">请选择区域</option>
-                            <option value="yellow">黄色置顶区</option>
-                            <option value="white">套白区域</option>
-                            <option value="lightYellow">套淡黄区域</option>
-                            <option value="cyan">套青区域</option>
+                            <option value="yellow">黄色区域 (强力推荐)</option>
+                            <option value="white">白色区域 (套白强力推荐)</option>
+                            <option value="lightYellow">浅黄色区域 (套青强力推荐)</option>
+                            <option value="cyan">青色区域 (套青强力推荐)</option>
                         </select>
+                        <small>根据区域设置不同的背景色和优先级</small>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="adContent">广告内容 *</label>
-                        <textarea id="adContent" name="content" rows="3" required></textarea>
+                        <label for="adContent">游戏版本特色介绍 *</label>
+                        <textarea id="adContent" name="content" rows="4" required placeholder="如：▅▅▅▅《１２０００》▅▅▅▅《经典复古》▅▅▅▅《今晚首区》▅▅▅▅"></textarea>
+                        <small>游戏特色介绍，支持特殊符号装饰</small>
                     </div>
                     <div class="form-group">
-                        <label for="adLink">跳转链接 *</label>
-                        <input type="url" id="adLink" name="link" required>
+                        <label for="adLink">游戏主页链接 *</label>
+                        <input type="url" id="adLink" name="link" required placeholder="http://example.com">
+                        <small>点击后跳转的游戏官网链接</small>
                     </div>
                 </div>
                 <div class="form-row">
+                    <div class="form-group">
+                        <label for="adStartTime">开机时间</label>
+                        <input type="text" id="adStartTime" name="startTime" placeholder="如：8月29日、今晚首区、今日新区">
+                        <small>服务器开机时间描述</small>
+                    </div>
                     <div class="form-group">
                         <label for="adStartDate">开始时间 *</label>
                         <input type="datetime-local" id="adStartDate" name="startDate" required>
+                        <small>广告开始显示的时间</small>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="adEndDate">结束时间 *</label>
                         <input type="datetime-local" id="adEndDate" name="endDate" required>
+                        <small>广告结束显示的时间</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="adSortWeight">排序权重</label>
+                        <input type="number" id="adSortWeight" name="sortWeight" value="0" min="0">
+                        <small>数值越大排序越靠前 (黄色区域建议100-81，白色区域建议70-68，浅黄色区域建议60-50，青色区域建议40-34)</small>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="adExperience">经验倍数</label>
-                        <input type="text" id="adExperience" name="experience" placeholder="如：300倍">
+                        <input type="text" id="adExperience" name="experience" placeholder="如：300倍、50倍、今日新区、特色专区">
+                        <small>游戏经验倍数或特色描述</small>
                     </div>
                     <div class="form-group">
                         <label for="adVersion">游戏版本</label>
-                        <input type="text" id="adVersion" name="version" placeholder="如：1.03H">
+                        <input type="text" id="adVersion" name="version" placeholder="如：1.03H、S6、独家S6、修仙S6">
+                        <small>游戏版本信息</small>
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="adSortWeight">排序权重</label>
-                        <input type="number" id="adSortWeight" name="sortWeight" value="0" min="0">
-                        <p class="form-desc">数字越大排序越靠前</p>
-                    </div>
                     <div class="form-group">
                         <label for="adStatus">状态</label>
                         <select id="adStatus" name="status">
@@ -423,7 +438,7 @@
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeAdModal()">取消</button>
+                    <button type="button" class="btn btn-secondary" id="cancelAdBtn">取消</button>
                     <button type="submit" class="btn btn-primary">保存</button>
                 </div>
             </form>
@@ -435,7 +450,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>广告续费</h3>
-                <span class="close" onclick="closeRenewModal()">&times;</span>
+                <span class="close" id="closeRenewModalBtn">&times;</span>
             </div>
             <form id="renewForm" class="renew-form">
                 <div class="form-group">
@@ -462,7 +477,7 @@
                     <span id="renewNewEndDate"></span>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeRenewModal()">取消</button>
+                    <button type="button" class="btn btn-secondary" id="cancelRenewBtn">取消</button>
                     <button type="submit" class="btn btn-primary">确认续费</button>
                 </div>
             </form>
@@ -474,14 +489,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>确认删除</h3>
-                <span class="close" onclick="closeDeleteModal()">&times;</span>
+                <span class="close" id="closeDeleteModalBtn">&times;</span>
             </div>
             <div class="modal-body">
                 <p>确认删除该广告？删除后无法恢复。</p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
-                <button class="btn btn-danger" onclick="confirmDelete()">确认删除</button>
+                <button class="btn btn-secondary" id="cancelDeleteBtn">取消</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
             </div>
         </div>
     </div>

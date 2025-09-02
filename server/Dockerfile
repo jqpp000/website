@@ -1,6 +1,11 @@
 # 使用官方Node.js镜像
 FROM node:18-alpine
 
+# 设置字符编码环境变量
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV NODE_ENV=development
+
 # 设置工作目录
 WORKDIR /app
 

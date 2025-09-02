@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>58信息网</title>
+<meta name="renderer" content="webkit|ie-comp|ie-stand">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name ="keywords" content="">
+<meta name="description" content="">
+</HEAD>
+<body>
+<link rel="stylesheet" type="text/css" href="styles.css">
+<div class="bg">
+    <div class="banner" style="display:grid; place-items:center; width:100%; padding:0; margin:0; background:#2E220A; overflow:hidden;">
+        <div style="width:1000px; height: 150px;; position:relative; box-sizing:border-box;">
+            <img src="/images1/logo_top_01.png" style="display:block; width:1000px; height:150px;" onerror="this.src='file:///d:/website/frontend/images1/logo_top_01.png'">
+        </div>
+    </div>
+
+    <table width="1000" border="0" align="center" bgcolor="#DC143C">
+      <tr>
+        <td><div align="center" class="STYLE2">58信息网 联系QQ：1194555775</div></td>
+      </tr>
+    </table>
+
+<!-- 黄色区域 - 强力推荐 -->
+<table cellspacing="0" cellpadding="0" width="1000" align="center" class="tb1" border="0">
+    <tr>
+      <th width="15%">服务器名</th>
+      <th width="15%">开机时间</th>
+      <th>游戏版本特色介绍</th>
+      <th width="8%">经验</th>
+      <th width="10%">版本</th>
+      <th width="10%">游戏主页</th>
+    </tr>
+    <tbody id="yellow-ads">
+        <!-- 黄色区域广告将通过JavaScript动态加载 -->
+    </tbody>
+</table>
+
+<!-- 白色区域 - 套白强力推荐 -->
+<table cellspacing="0" cellpadding="0" width="1000" align="center" class="tb1" border="0">
+    <tr>
+      <th width="15%">服务器名</th>
+      <th width="15%">开机时间</th>
+      <th>游戏版本特色介绍</th>
+      <th width="8%">经验</th>
+      <th width="10%">版本</th>
+      <th width="10%">游戏主页</th>
+    </tr>
+    <tbody id="white-ads">
+        <!-- 白色区域广告将通过JavaScript动态加载 -->
+    </tbody>
+</table>
+
+<!-- 浅黄色区域 - 套淡黄强力推荐 -->
+<table cellspacing="0" cellpadding="0" width="1000" align="center" class="tb1" border="0">
+    <tr>
+      <th width="15%">服务器名</th>
+      <th width="15%">开机时间</th>
+      <th>游戏版本特色介绍</th>
+      <th width="8%">经验</th>
+      <th width="10%">版本</th>
+      <th width="10%">游戏主页</th>
+    </tr>
+    <tbody id="lightYellow-ads">
+        <!-- 浅黄色区域广告将通过JavaScript动态加载 -->
+    </tbody>
+</table>
+
+<!-- 青色区域 - 套青强力推荐 -->
+<table cellspacing="0" cellpadding="0" width="1000" align="center" class="tb1" border="0">
+    <tr>
+      <th width="15%">服务器名</th>
+      <th width="15%">开机时间</th>
+      <th>游戏版本特色介绍</th>
+      <th width="8%">经验</th>
+      <th width="10%">版本</th>
+      <th width="10%">游戏主页</th>
+    </tr>
+    <tbody id="cyan-ads">
+        <!-- 青色区域广告将通过JavaScript动态加载 -->
+    </tbody>
+</table>
+
+<script>
+// 从API加载广告数据
+async function loadAdsFromAPI() {
+    try {
+        const response = await fetch('/api/v1/ads?limit=200');
+        const result = await response.json();
+        
+        if (result.success) {
+            const ads = result.data.ads;
+            
+            // 按区域分组广告
+            const yellowAds = ads.filter(ad => ad.region === 'yellow');
+            const whiteAds = ads.filter(ad => ad.region === 'white');
+            const lightYellowAds = ads.filter(ad => ad.region === 'lightYellow');
+            const cyanAds = ads.filter(ad => ad.region === 'cyan');
+            
+            // 渲染各区域广告
+            renderAds('yellow-ads', yellowAds, '#FFFF00');
+            renderAds('white-ads', whiteAds, '#FFFFFF');
+            renderAds('lightYellow-ads', lightYellowAds, '#d6ff52');
+            renderAds('cyan-ads', cyanAds, '#d6ff52');
+            
+            console.log('广告加载成功:', {
+                yellow: yellowAds.length,
+                white: whiteAds.length,
+                lightYellow: lightYellowAds.length,
+                cyan: cyanAds.length
+            });
+        } else {
+            console.error('加载广告失败:', result.error);
+        }
+    } catch (error) {
+        console.error('网络错误:', error);
+    }
+}
+
+// 渲染广告到指定容器
+function renderAds(containerId, ads, bgColor) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // 清空容器
+    container.innerHTML = '';
+    
+    // 按排序权重排序
+    ads.sort((a, b) => (b.sort_weight || 0) - (a.sort_weight || 0));
+    
+    // 渲染每个广告
+    ads.forEach(ad => {
+        const row = document.createElement('tr');
+        row.style.backgroundColor = bgColor;
+        row.onmouseover = function() { this.style.backgroundColor = '#B0E0E6'; };
+        row.onmouseout = function() { this.style.backgroundColor = bgColor; };
+        
+        row.innerHTML = `
+            <td>&nbsp;<a href="${ad.link}" target="_blank"><font color="red">${ad.title}</font></a></td>
+            <td align="center"><font color="red">${ad.startTime || '今日新区'}&nbsp;品牌强力推荐</font></td>
+            <td><font color="red">&nbsp;${ad.content}</font></td>
+            <td align="center"><font color="red">${ad.experience || '特色专区'}</font></td>
+            <td align="center"><font color="red">${ad.version || '1.03H'}</font></td>
+            <td align="center"><a href="${ad.link}" target="_blank"><font color="red">点击查看</font></a></td>
+        `;
+        
+        container.appendChild(row);
+    });
+}
+
+// 页面加载完成后加载广告
+document.addEventListener('DOMContentLoaded', loadAdsFromAPI);
+</script>
+
+</body>
+</html>

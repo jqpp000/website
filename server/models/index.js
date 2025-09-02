@@ -13,11 +13,19 @@ const sequelize = new Sequelize(
     logging: config.database.logging,
     pool: config.database.pool,
     timezone: '+08:00', // 设置时区为北京时间
+    dialectOptions: {
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_unicode_ci',
+      supportBigNumbers: true,
+      bigNumberStrings: true
+    },
     define: {
       timestamps: true,
       underscored: true,
       createdAt: 'create_time',
-      updatedAt: 'update_time'
+      updatedAt: 'update_time',
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_unicode_ci'
     }
   }
 );

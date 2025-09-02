@@ -36,8 +36,58 @@
     </tr>
 
 
-<!-- 从API加载黄色区域广告数据 -->
-<script src="/api/v1/ads/frontend"></script>
+<script language="JavaScript" type="text/JavaScript">
+	theAds=Array(20).fill('');
+	shu =20
+	dot=''
+
+	theAds[1]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://www.3333mu.com" target=_blank><font color=red >《豪-情》</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▅▅▅▅《１２０００》▅▅▅▅《经典复古》▅▅▅▅《今晚首区》▅▅▅▅</font></TD><TD align=center><font color=red>300倍</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://www.3333mu.com" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[2]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://9393qj.com:66/" target=_blank><font color=red >▄豪情奇迹50倍▄</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp; 【１０／１１／１３点】 【EG新端】【F7完整+Z双助手】【超级防G】</font></TD><TD align=center><font color=red>50倍</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://9393qj.com:66/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[3]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://www.144mu.com:66" target=_blank><font color=red >▄【斩神奇迹】今日首区▄</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▄▄▄【６４０００】▄▄▄【经典怀旧】▄▄▄【物品保值】▄▄▄【今晚首区】▄▄▄</font></TD><TD align=center><font color=red>999倍</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://www.144mu.com:66" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[4]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://zd.9smu.com:168/" target=_blank><font color=red >凌天9999级大区[首区]</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;地图高爆-+15全属性随意爆-9999级不快餐-天赋-超级大师-1-6级副本挑战-7D翅膀</font></TD><TD align=center><font color=red>9999级</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://zd.9smu.com:168/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[5]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://www.777yy.cn" target=_blank><font color=red >《传-说》</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▅▅▅▅《３万２》▅▅▅▅《经典复古》▅▅▅▅《今日新区》▅▅▅▅</font></TD><TD align=center><font color=red>500倍</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://www.777yy.cn" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[6]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://www.60mu.com" target=_blank><font color=red >【【【觉醒奇迹】】】</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▄▄▄【１２０００】▄▄▄【巅峰版本】▄▄▄【荣耀大陆】▄▄▄【今晚首区】▄▄▄</font></TD><TD align=center><font color=red>200倍</font></TD><TD align=center><font color=red>独家S6</font></TD><TD align=center><a href="http://www.60mu.com" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[7]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://www.95mu.com" target=_blank><font color=red >【王】【者】【首】【区】</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▄▄▄【３２０００】▄▄▄【品牌大服】▄▄▄【精品怀旧】▄▄▄【今晚首区】▄▄▄</font></TD><TD align=center><font color=red>500倍</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://www.95mu.com" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[8]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://ly.278mu.com:88/" target=_blank><font color=red >★★★★凌云奇迹★★★★</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▄▄▄▄▄【２４０００】【无VIP称号】【积分购买GM宝箱】【宠物坐骑同骑】▄▄▄▄▄</font></TD><TD align=center><font color=red>特色新区</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://ly.278mu.com:88/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[9]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://103.36.167.161:88/" target=_blank><font color=red >〓逆龙觉醒〓【新版首区】〓</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;殺</font></TD><TD align=center><font color=red>全网独家</font></TD><TD align=center><font color=red>限单开</font></TD><TD align=center><a href="http://103.36.167.161:88/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[10]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://9966qj.com:66/" target=_blank><font color=red >▄灵魂奇迹20倍▄</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;【５／６／７点】【EG新端+双助手】【第一个大区】</font></TD><TD align=center><font color=red>20倍</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://9966qj.com:66/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[11]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://zd.588mu.com:81/" target=_blank><font color=red >御豪奇迹▄重磅归来▄</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▄【10/11/12】▄【纯正S6老品牌新服】▄【不售任何装备】▄【商人月入过万】▄</font></TD><TD align=center><font color=red>推荐</font></TD><TD align=center><font color=red>S6</font></TD><TD align=center><a href="http://zd.588mu.com:81/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[12]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://wwww.s6mu.com:88/" target=_blank><font color=red >★起源★【休闲耐玩】</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▅满点6000左右▅▅白瓢天堂▅▅好玩易上手▅▅装备靠自己▅</font></TD><TD align=center><font color=red>100/20</font></TD><TD align=center><font color=red>特色S6</font></TD><TD align=center><a href="http://wwww.s6mu.com:88/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[13]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://www.shenmomu.com:88/" target=_blank><font color=red >▄神魔奇迹【今日首区】▄</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▄▄▄【15/16/28】▄▄▄【独立双区】▄▄▄【专属宠物】▄▄▄【跨服超爽PK】▄▄▄</font></TD><TD align=center><font color=red>50/100</font></TD><TD align=center><font color=red>S6EP3</font></TD><TD align=center><a href="http://www.shenmomu.com:88/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[14]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://cq.01mu.com:88/" target=_blank><font color=red >问鼎奇迹【首区】</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;《散人天堂~BOSS掉元宝~全职平衡》-《今夜首区》</font></TD><TD align=center><font color=red>500倍</font></TD><TD align=center><font color=red>S6</font></TD><TD align=center><a href="http://cq.01mu.com:88/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[15]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://mu.165mu.com:88" target=_blank><font color=red >★★★★依然MU★★★★</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;【１２／１３／１５点】【小怪无限刷元宝】【特色神装】【爆所有顶级】</font></TD><TD align=center><font color=red>今日新区</font></TD><TD align=center><font color=red>EX603</font></TD><TD align=center><a href="http://mu.165mu.com:88" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[16]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href=" http://103.635mu.com:88" target=_blank><font color=red >星芒奇迹▄新服首区▄</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▄▄▄【４ 8０００】【BOSS爆所有顶级】【EG新端+双助手】【品牌大服】▄▄▄</font></TD><TD align=center><font color=red>今日新区</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href=" http://103.635mu.com:88" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[17]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://zd.20mu.com:166/" target=_blank><font color=red >天启103『新服首区』</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;【５／６／７点】【无VIP无声望】【不售任何道具积分】【让利商人只为人气】</font></TD><TD align=center><font color=red>20倍</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://zd.20mu.com:166/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[18]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://lm.46mu.com:81" target=_blank><font color=red >〓〓〓★雷鸣奇迹★〓〓〓</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;【１8／１９／２０点】【打怪掉充值】【积分购买GM宝箱】【进阶神装】</font></TD><TD align=center><font color=red>今日新区</font></TD><TD align=center><font color=red>特色S6</font></TD><TD align=center><a href="http://lm.46mu.com:81" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[19]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://188mu.com:88/" target=_blank><font color=red >天下</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;３２０００复古</font></TD><TD align=center><font color=red>今日新区</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://188mu.com:88/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+	
+	theAds[20]='<TR bgColor=#FFFF00 onmouseover=javascript:this.bgColor="#B0E0E6" onmouseout=javascript:this.bgColor="#FFFF00"><TD>&nbsp;<a href="http://www.620mu.com:88/" target=_blank><font color=red >神佑奇迹▄▄王者大区▄▄</font></a></TD><TD align=center><font color=red>8月29日&nbsp;品牌强力推荐</font></TD><TD><font color=red>&nbsp;▄超多福利领取▄怀旧经典版▄精品老牌设置▄物品保值高▄畅爽ＰＫ▄散人天堂▄公平耐玩▄</font></TD><TD align=center><font color=red>200倍</font></TD><TD align=center><font color=red>1.03H</font></TD><TD align=center><a href="http://www.620mu.com:88/" target=_blank><font color=red>点击查看</font></a></TD></tr>'
+		
+theAds2='';
+var idx;
+theAds = theAds.sort(function(){return Math.random()*new Date%3-1;});
+for(idx = 0; idx < shu; idx++){
+  document.write(dot+theAds[idx]);
+}
+document.write(dot+theAds2);
 
 
 
